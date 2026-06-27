@@ -1,0 +1,360 @@
+{% extends "base.html" %}
+{% block body %}
+
+<!-- ══════════ HERO ══════════ -->
+<section id="hero" class="hero-section">
+  <div class="hero-bg-shape"></div>
+  <div class="hero-bg-shape2"></div>
+  <div class="container">
+    <div class="row align-items-center gy-5">
+      <div class="col-lg-6" data-aos="fade-up" data-aos-duration="700">
+        <div class="hero-eyebrow">
+          <span class="eyebrow-dot"></span> Blockchain-Powered Healthcare
+        </div>
+        <h1 class="hero-title">
+          Secure Health Records<br />
+          <span class="hero-title-accent">You Can Trust</span>
+        </h1>
+        <p class="hero-desc">
+          MediCare stores patient medical data on the blockchain — tamper-proof,
+          instantly verifiable via QR code, and accessible to the right people at the right time.
+        </p>
+        <div class="hero-cta-row">
+          <a href="{% url 'patient_password_create' %}" class="btn-hero-filled">
+            <i class="bi bi-person-heart"></i> Register as Patient
+          </a>
+          <a href="{% url 'log_in' %}" class="btn-hero-outline">
+            <i class="bi bi-box-arrow-in-right"></i> Login
+          </a>
+        </div>
+        <div class="hero-stats-row">
+          <div class="hero-stat">
+            <div class="hero-stat-value">100%</div>
+            <div class="hero-stat-label">Tamper-Proof</div>
+          </div>
+          <div class="hero-stat-divider"></div>
+          <div class="hero-stat">
+            <div class="hero-stat-value">QR</div>
+            <div class="hero-stat-label">Instant Verify</div>
+          </div>
+          <div class="hero-stat-divider"></div>
+          <div class="hero-stat">
+            <div class="hero-stat-value">SHA-256</div>
+            <div class="hero-stat-label">Encryption</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6" data-aos="zoom-out" data-aos-duration="800" data-aos-delay="100">
+        <div class="hero-visual">
+          <div class="hero-card hero-card-main">
+            <div class="hcard-header">
+              <i class="bi bi-shield-check-fill"></i>
+              <span>Blockchain Verified</span>
+              <span class="hcard-dot active"></span>
+            </div>
+            <div class="hcard-name">Riya Sharma</div>
+            <div class="hcard-meta">Patient ID #1042 &nbsp;·&nbsp; Cardiology</div>
+            <div class="hcard-hash">
+              <span class="hcard-hash-label">SHA-256</span>
+              <span class="hcard-hash-val">a3f8c2d7e94b…</span>
+            </div>
+            <div class="hcard-footer">
+              <span><i class="bi bi-calendar3"></i> Apr 21, 2025</span>
+              <span class="hcard-status">Secured</span>
+            </div>
+          </div>
+          <div class="hero-card hero-card-qr" data-aos="fade-left" data-aos-delay="300">
+            <i class="bi bi-qr-code" style="font-size:2.5rem;color:var(--primary);"></i>
+            <div style="font-size:.75rem;font-weight:700;color:#0a6640;margin-top:.5rem;">Scan to Verify</div>
+          </div>
+          <div class="hero-card hero-card-stat" data-aos="fade-up" data-aos-delay="400">
+            <i class="bi bi-activity" style="color:var(--primary);font-size:1.1rem;"></i>
+            <div class="hstat-val">Updated</div>
+            <div class="hstat-label">2 hrs ago</div>
+          </div>
+          <div class="hero-floating-dot d1"></div>
+          <div class="hero-floating-dot d2"></div>
+          <div class="hero-floating-dot d3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ TRUST BAR ══════════ -->
+<section class="trust-bar">
+  <div class="container">
+    <div class="trust-bar-inner">
+      <div class="trust-item"><i class="bi bi-shield-lock-fill"></i> Blockchain Secured</div>
+      <div class="trust-sep"></div>
+      <div class="trust-item"><i class="bi bi-qr-code-scan"></i> QR Verification</div>
+      <div class="trust-sep"></div>
+      <div class="trust-item"><i class="bi bi-person-check-fill"></i> Doctor Verified Updates</div>
+      <div class="trust-sep"></div>
+      <div class="trust-item"><i class="bi bi-lock-fill"></i> SHA-256 Encrypted</div>
+      <div class="trust-sep"></div>
+      <div class="trust-item"><i class="bi bi-clock-history"></i> Full Audit Trail</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ ABOUT ══════════ -->
+<section id="about" class="content-section">
+  <div class="container">
+    <div class="row align-items-center gy-5">
+      <div class="col-lg-5" data-aos="fade-right">
+        <div class="about-visual">
+          <div class="about-block ab1">
+            <i class="bi bi-file-earmark-medical-fill"></i>
+            <div>
+              <div class="ab-title">Medical Record</div>
+              <div class="ab-sub">Stored on blockchain</div>
+            </div>
+          </div>
+          <div class="about-block ab2">
+            <i class="bi bi-arrow-right-circle-fill"></i>
+            <div>
+              <div class="ab-title">Hash Generated</div>
+              <div class="ab-sub">SHA-256 encryption</div>
+            </div>
+          </div>
+          <div class="about-block ab3">
+            <i class="bi bi-qr-code"></i>
+            <div>
+              <div class="ab-title">QR Code Issued</div>
+              <div class="ab-sub">Patient can verify anytime</div>
+            </div>
+          </div>
+          <div class="about-connector"></div>
+        </div>
+      </div>
+      <div class="col-lg-7" data-aos="fade-left" data-aos-delay="100">
+        <div class="section-eyebrow">About the System</div>
+        <h2 class="section-title">Why Blockchain for Health Records?</h2>
+        <p class="section-body">
+          Traditional health records are fragmented, vulnerable to tampering, and difficult to share.
+          MediCare solves this by anchoring every patient update to the Ethereum blockchain —
+          creating an immutable, transparent, and instantly verifiable record.
+        </p>
+        <p class="section-body">
+          Doctors update patient data through a secure portal. Each update generates a new
+          cryptographic hash and QR code. Patients own their data and can share it with any
+          verified doctor in seconds.
+        </p>
+        <div class="about-checklist">
+          <div class="about-check"><i class="bi bi-check-circle-fill"></i> No single point of failure</div>
+          <div class="about-check"><i class="bi bi-check-circle-fill"></i> Every change is permanently recorded</div>
+          <div class="about-check"><i class="bi bi-check-circle-fill"></i> Patients control access to their data</div>
+          <div class="about-check"><i class="bi bi-check-circle-fill"></i> Doctors can verify records in real-time</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ FEATURES ══════════ -->
+<section id="features" class="content-section section-alt">
+  <div class="container">
+    <div class="section-header text-center" data-aos="fade-up">
+      <div class="section-eyebrow">Core Features</div>
+      <h2 class="section-title">Everything Built for Trust</h2>
+      <p class="section-subtitle">A complete ecosystem for secure, transparent, and efficient healthcare data management.</p>
+    </div>
+
+    <div class="row g-4 mt-2">
+      {% for feat in features %}
+      <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter0 }}00">
+        <div class="feature-card">
+          <div class="feature-icon" style="--icon-bg:{{ feat.bg }};--icon-color:{{ feat.color }};">
+            <i class="bi {{ feat.icon }}"></i>
+          </div>
+          <h5 class="feature-title">{{ feat.title }}</h5>
+          <p class="feature-desc">{{ feat.desc }}</p>
+        </div>
+      </div>
+      {% empty %}
+      <!-- Static fallback if no context passed -->
+      <div class="col-md-6 col-lg-4" data-aos="fade-up">
+        <div class="feature-card">
+          <div class="feature-icon" style="--icon-bg:#e6f9f1;--icon-color:#0cb76b;">
+            <i class="bi bi-shield-lock-fill"></i>
+          </div>
+          <h5 class="feature-title">Blockchain Security</h5>
+          <p class="feature-desc">Every record is hashed and stored on the Ethereum blockchain, making tampering impossible and detectable.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="100">
+        <div class="feature-card">
+          <div class="feature-icon" style="--icon-bg:#e8f0fe;--icon-color:#3b82f6;">
+            <i class="bi bi-qr-code-scan"></i>
+          </div>
+          <h5 class="feature-title">QR Code Verification</h5>
+          <p class="feature-desc">Each patient receives a unique QR code that encodes their blockchain hash for instant on-site verification.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="200">
+        <div class="feature-card">
+          <div class="feature-icon" style="--icon-bg:#fff8e6;--icon-color:#e6a800;">
+            <i class="bi bi-clock-history"></i>
+          </div>
+          <h5 class="feature-title">Complete Audit Trail</h5>
+          <p class="feature-desc">Every update, consultation, and change is permanently recorded in a transparent, chronological timeline.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="300">
+        <div class="feature-card">
+          <div class="feature-icon" style="--icon-bg:#fdeaea;--icon-color:#ef4444;">
+            <i class="bi bi-person-lock"></i>
+          </div>
+          <h5 class="feature-title">Patient Data Ownership</h5>
+          <p class="feature-desc">Patients fully own their records. They can share access with specific doctors and revoke it anytime.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="400">
+        <div class="feature-card">
+          <div class="feature-icon" style="--icon-bg:#f3e8ff;--icon-color:#9333ea;">
+            <i class="bi bi-person-badge-fill"></i>
+          </div>
+          <h5 class="feature-title">Doctor Management</h5>
+          <p class="feature-desc">Doctors can accept patients, update records, generate new QR codes, and view complete medical history.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="500">
+        <div class="feature-card">
+          <div class="feature-icon" style="--icon-bg:#e0f7fa;--icon-color:#0097a7;">
+            <i class="bi bi-speedometer2"></i>
+          </div>
+          <h5 class="feature-title">Admin Dashboard</h5>
+          <p class="feature-desc">Admins manage all patients, doctors, and appointments from a powerful centralised control panel.</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ HOW IT WORKS ══════════ -->
+<section id="how" class="content-section">
+  <div class="container">
+    <div class="section-header text-center" data-aos="fade-up">
+      <div class="section-eyebrow">Process</div>
+      <h2 class="section-title">How It Works</h2>
+      <p class="section-subtitle">From registration to blockchain-secured verification in four simple steps.</p>
+    </div>
+
+    <div class="how-steps">
+      <div class="how-line"></div>
+      <div class="row g-4 mt-2">
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="0">
+          <div class="how-step">
+            <div class="step-number">01</div>
+            <div class="step-icon"><i class="bi bi-person-plus-fill"></i></div>
+            <h5 class="step-title">Patient Registers</h5>
+            <p class="step-desc">Admin registers the patient. A blockchain hash and QR code are instantly generated and assigned.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="100">
+          <div class="how-step">
+            <div class="step-number">02</div>
+            <div class="step-icon"><i class="bi bi-send-fill"></i></div>
+            <h5 class="step-title">Request a Doctor</h5>
+            <p class="step-desc">Patient sends a request to a doctor. The doctor reviews and accepts or rejects the request.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="200">
+          <div class="how-step">
+            <div class="step-number">03</div>
+            <div class="step-icon"><i class="bi bi-clipboard2-pulse-fill"></i></div>
+            <h5 class="step-title">Doctor Updates Record</h5>
+            <p class="step-desc">After consultation, the doctor records symptoms, diagnosis, and prescription. A new blockchain hash and QR are generated.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="300">
+          <div class="how-step">
+            <div class="step-number">04</div>
+            <div class="step-icon"><i class="bi bi-shield-check-fill"></i></div>
+            <h5 class="step-title">Verify Anytime</h5>
+            <p class="step-desc">Scan the QR code to instantly verify the patient's record against the blockchain hash. Tamper detection built in.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ ROLES ══════════ -->
+<section id="roles" class="content-section section-alt">
+  <div class="container">
+    <div class="section-header text-center" data-aos="fade-up">
+      <div class="section-eyebrow">Portal Access</div>
+      <h2 class="section-title">Three Roles, One System</h2>
+      <p class="section-subtitle">Each portal is purpose-built for its users — patients, doctors, and administrators.</p>
+    </div>
+    <div class="row g-4 mt-2">
+      <div class="col-md-4" data-aos="fade-up" data-aos-delay="0">
+        <div class="role-card">
+          <div class="role-icon role-patient"><i class="bi bi-person-heart"></i></div>
+          <h5 class="role-title">Patient</h5>
+          <p class="role-desc">View your blockchain-secured medical history, track doctor visits, download your QR code, and manage appointment requests.</p>
+          <ul class="role-list">
+            <li><i class="bi bi-check2"></i> View medical history</li>
+            <li><i class="bi bi-check2"></i> Download QR code</li>
+            <li><i class="bi bi-check2"></i> Send doctor requests</li>
+            <li><i class="bi bi-check2"></i> View blockchain hash</li>
+          </ul>
+          <a href="{% url 'log_in' %}" class="role-cta">Patient Login <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+      <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+        <div class="role-card role-card-featured">
+          <div class="role-featured-badge">Most Active</div>
+          <div class="role-icon role-doctor"><i class="bi bi-person-badge-fill"></i></div>
+          <h5 class="role-title">Doctor</h5>
+          <p class="role-desc">Accept patients, update medical records, generate blockchain-secured QR codes, and scan patient QRs for instant verification.</p>
+          <ul class="role-list">
+            <li><i class="bi bi-check2"></i> Accept/reject requests</li>
+            <li><i class="bi bi-check2"></i> Update patient records</li>
+            <li><i class="bi bi-check2"></i> Generate QR codes</li>
+            <li><i class="bi bi-check2"></i> QR scanner tool</li>
+          </ul>
+          <a href="{% url 'log_in' %}" class="role-cta">Doctor Login <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+      <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+        <div class="role-card">
+          <div class="role-icon role-admin"><i class="bi bi-shield-lock-fill"></i></div>
+          <h5 class="role-title">Admin</h5>
+          <p class="role-desc">Register and manage all patients and doctors, oversee appointments, and maintain full system oversight from the admin dashboard.</p>
+          <ul class="role-list">
+            <li><i class="bi bi-check2"></i> Register patients & doctors</li>
+            <li><i class="bi bi-check2"></i> Manage appointments</li>
+            <li><i class="bi bi-check2"></i> View all records</li>
+            <li><i class="bi bi-check2"></i> System analytics</li>
+          </ul>
+          <a href="{% url 'admin_login' %}" class="role-cta">Admin Login <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ CTA BANNER ══════════ -->
+<section class="cta-section" data-aos="fade-up">
+  <div class="container">
+    <div class="cta-inner">
+      <div class="cta-glow"></div>
+      <h2 class="cta-title">Ready to Secure Your Health Records?</h2>
+      <p class="cta-sub">Join MediCare and experience healthcare data management that is transparent, tamper-proof, and always in your control.</p>
+      <div class="cta-buttons">
+        <a href="{% url 'patient_password_create' %}" class="btn-cta-filled">
+          <i class="bi bi-person-heart"></i> Register as Patient
+        </a>
+        <a href="{% url 'doctor_password_create' %}" class="btn-cta-outline">
+          <i class="bi bi-person-badge"></i> Register as Doctor
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock body %}

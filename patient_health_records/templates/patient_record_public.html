@@ -1,0 +1,145 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Patient Record — {{ patient.full_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+    <style>
+        body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
+        .page-wrap { max-width: 860px; margin: 2rem auto; padding: 0 1rem 3rem; }
+        .verify-bar { display: flex; align-items: center; gap: 12px; padding: 1rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; }
+        .verify-bar.ok { background: #e6f9f1; border: 1.5px solid #b2dfcc; color: #0a6640; }
+        .verify-bar.fail { background: #fdeaea; border: 1.5px solid #f5b8b8; color: #991b1b; }
+        .card-panel { background: white; border-radius: 14px; border: 1.5px solid #edf2f7; margin-bottom: 1.5rem; overflow: hidden; }
+        .card-header { padding: .85rem 1.25rem; border-bottom: 1px solid #edf2f7; display: flex; align-items: center; justify-content: space-between; }
+        .card-header h5 { margin: 0; font-size: .95rem; font-weight: 700; color: #1a2332; }
+        .card-body { padding: 1.25rem; }
+        .info-row { display: flex; gap: 8px; margin-bottom: .6rem; }
+        .info-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: #8896a5; min-width: 110px; padding-top: 2px; }
+        .info-value { font-size: .9rem; font-weight: 500; color: #1a2332; }
+        .hash-box { font-family: monospace; font-size: .72rem; background: #f7fafc; border: 1px solid #edf2f7; border-radius: 8px; padding: .5rem .75rem; word-break: break-all; color: #4a5568; }
+        .visit-card { border: 1.5px solid #edf2f7; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+        .visit-card:last-child { margin-bottom: 0; }
+        .badge-ok { background: #e6f9f1; color: #0a6640; border: 1px solid #b2dfcc; padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 600; }
+        .section-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #8896a5; margin-bottom: .4rem; }
+    </style>
+</head>
+<body>
+<div class="page-wrap">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem;">
+        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#0cb76b,#0a9055);display:flex;align-items:center;justify-content:center;color:white;font-size:1.2rem;">
+            <i class="bi bi-heart-pulse-fill"></i>
+        </div>
+        <div>
+            <h4 style="margin:0;font-weight:800;color:#1a2332;">MediCare</h4>
+            <p style="margin:0;font-size:.8rem;color:#8896a5;">Read-only Patient Record</p>
+        </div>
+    </div>
+
+    <!-- Verification Bar -->
+    {% if chain_verified %}
+    <div class="verify-bar ok">
+        <i class="bi bi-shield-check" style="font-size:1.4rem;"></i>
+        <div>
+            <strong>Blockchain Verified</strong>
+            <p style="margin:0;font-size:.8rem;">This record matches the blockchain. Data is authentic and untampered.</p>
+        </div>
+    </div>
+    {% else %}
+    <div class="verify-bar fail">
+        <i class="bi bi-shield-exclamation" style="font-size:1.4rem;"></i>
+        <div>
+            <strong>Verification Pending</strong>
+            <p style="margin:0;font-size:.8rem;">Could not verify against blockchain. Check Ganache connection.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Patient Info -->
+    <div class="card-panel">
+        <div class="card-header">
+            <h5><i class="bi bi-person-badge"></i> Patient Information</h5>
+            <span class="badge-ok">ID #{{ patient.id }}</span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="info-row"><span class="info-label">Full Name</span><span class="info-value">{{ patient.full_name }}</span></div>
+                    <div class="info-row"><span class="info-label">Age</span><span class="info-value">{{ patient.age }} years</span></div>
+                    <div class="info-row"><span class="info-label">Gender</span><span class="info-value">{{ patient.gender }}</span></div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="info-row"><span class="info-label">Phone</span><span class="info-value">{{ patient.phone }}</span></div>
+                    <div class="info-row"><span class="info-label">Condition</span><span class="info-value">{{ patient.disease|default:"—" }}</span></div>
+                    <div class="info-row"><span class="info-label">Assigned Dr.</span><span class="info-value">{{ patient.doctor_assigned|default:"—" }}</span></div>
+                </div>
+                <div class="col-12">
+                    <div class="info-row"><span class="info-label">Address</span><span class="info-value">{{ patient.address }}</span></div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <div class="section-title">Blockchain Hash</div>
+                <div class="hash-box">{{ patient.blockchain_hash|default:"Not recorded yet" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visit Records -->
+    <div class="card-panel">
+        <div class="card-header">
+            <h5><i class="bi bi-clipboard2-pulse"></i> Visit Records</h5>
+            <span class="badge-ok">{{ visits|length }} Visits</span>
+        </div>
+        <div class="card-body">
+            {% if visits %}
+                {% for v in visits %}
+                <div class="visit-card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+                        <strong style="color:#1a2332;">{{ v.visit_date|date:"F d, Y" }}</strong>
+                        <span style="font-size:.78rem;color:#8896a5;">Dr. {{ v.doctor.full_name }}</span>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="info-row"><span class="info-label">Symptoms</span><span class="info-value">{{ v.symptoms|default:"—" }}</span></div>
+                            <div class="info-row"><span class="info-label">Diagnosis</span><span class="info-value">{{ v.diagnosis|default:"—" }}</span></div>
+                            <div class="info-row"><span class="info-label">Tests</span><span class="info-value">{{ v.tests|default:"—" }}</span></div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="info-row"><span class="info-label">Prescription</span><span class="info-value">{{ v.prescription|default:"—" }}</span></div>
+                            <div class="info-row"><span class="info-label">Follow Up</span><span class="info-value">{{ v.follow_up_date|default:"—" }}</span></div>
+                            <div class="info-row"><span class="info-label">Notes</span><span class="info-value">{{ v.notes|default:"—" }}</span></div>
+                        </div>
+                    </div>
+                    {% if v.prescription_image %}
+                    <div class="mt-2">
+                        <a href="{{ v.prescription_image.url }}" target="_blank" style="font-size:.8rem;color:#0cb76b;text-decoration:none;font-weight:600;">
+                            <i class="bi bi-file-earmark-medical"></i> View Prescription
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% if v.blockchain_hash %}
+                    <div class="mt-2">
+                        <div class="section-title">Hash</div>
+                        <div class="hash-box">{{ v.blockchain_hash }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <p style="color:#8896a5;text-align:center;padding:1.5rem 0;">No visits recorded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <p style="text-align:center;font-size:.75rem;color:#b0bec5;margin-top:1rem;">
+        <i class="bi bi-lock-fill"></i> This is a read-only secure record. Powered by MediCare Blockchain System.
+    </p>
+
+</div>
+</body>
+</html>

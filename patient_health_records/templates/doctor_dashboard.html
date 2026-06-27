@@ -1,0 +1,1154 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediCare - Doctor Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+  <script src="https://unpkg.com/@zxing/library@0.19.1"></script>
+  <!-- Shared styles -->
+  <link rel="stylesheet" href="{% static 'assets/css/medicare_common.css' %}">
+  <style>
+    /* ===== DOCTOR-SPECIFIC: Coloured panel headers ===== */
+    .panel-header.header-warning {
+      background: #fff8e6;
+      border-bottom-color: #ffe5a0;
+    }
+
+    .panel-header.header-warning h5 {
+      color: #8a6000;
+    }
+
+    .panel-header.header-warning h5 i {
+      color: #e6a800;
+    }
+
+    .panel-header.header-success {
+      background: #e6f9f1;
+      border-bottom-color: #b2dfcc;
+    }
+
+    .panel-header.header-success h5 {
+      color: #0a5c35;
+    }
+
+    .panel-header.header-success h5 i {
+      color: var(--primary);
+    }
+
+    .panel-header.header-info {
+      background: #e8f0fe;
+      border-bottom-color: #c4d4fd;
+    }
+
+    .panel-header.header-info h5 {
+      color: #1a3a8a;
+    }
+
+    .panel-header.header-info h5 i {
+      color: #3b6ef0;
+    }
+
+    /* ===== DOCTOR-SPECIFIC: Profile ===== */
+    .profile-avatar-wrap {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 3px solid var(--primary);
+      overflow: hidden;
+      margin: 0 auto 1rem;
+      background: #e6f9f1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .profile-avatar-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-avatar-wrap i {
+      font-size: 2.5rem;
+      color: #8896a5;
+    }
+
+    .doctor-badge {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      display: inline-block;
+      margin-top: 0.5rem;
+    }
+
+    /* ===== DOCTOR-SPECIFIC: Patient cards ===== */
+    .patient-card {
+      border: 1.5px solid #edf2f7;
+      border-radius: 12px;
+      padding: 1.1rem;
+      transition: var(--transition);
+      cursor: pointer;
+      margin-bottom: 1rem;
+      background: white;
+    }
+
+    .patient-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: var(--hover-shadow);
+    }
+
+    .patient-card.selected {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .patient-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--primary);
+      background: #e6f9f1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .patient-avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .patient-avatar i {
+      font-size: 1.3rem;
+      color: #8896a5;
+    }
+
+    /* ===== DOCTOR-SPECIFIC: Form section title ===== */
+    .form-section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1a2332;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--primary-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-section-title i {
+      color: var(--primary);
+    }
+
+    /* ===== DOCTOR-SPECIFIC: QR Scanner ===== */
+    #qr-video {
+      width: 100%;
+      height: 280px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 2px solid #e2e8f0;
+      background-color: #1a2332;
+      display: block;
+    }
+
+    #qr-canvas {
+      display: none;
+    }
+
+    .camera-controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 1rem;
+      justify-content: center;
+    }
+
+    /* ===== DOCTOR-SPECIFIC: Schedule items ===== */
+    .schedule-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid #f0f4f8;
+    }
+
+    .schedule-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .schedule-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .schedule-icon.green {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .schedule-icon.orange {
+      background: #fff3e0;
+      color: #e67e22;
+    }
+
+    /* ===== DOCTOR-SPECIFIC: Quick action buttons ===== */
+    .quick-action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      border: 1.5px solid #e0e7ef;
+      background: white;
+      color: #3a4a5c;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      width: 100%;
+      text-decoration: none;
+    }
+
+    .quick-action-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-light);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(12, 183, 107, 0.12);
+    }
+
+    /* ===== DOCTOR-SPECIFIC: Patient info card (QR scan result) ===== */
+    .patient-info-card {
+      background: var(--primary-light);
+      border-left: 4px solid var(--primary);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    .info-item {
+      padding: 0.6rem 0;
+      border-bottom: 1px solid rgba(12, 183, 107, 0.1);
+      font-size: 0.88rem;
+      color: #2d3748;
+    }
+
+    .info-item:last-child {
+      border-bottom: none;
+    }
+
+    /* ===== DOCTOR-SPECIFIC: Hash verification ===== */
+    .verification-result {
+      display: none;
+      margin-top: 1.5rem;
+    }
+
+    .hash-verification-container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ===== DOCTOR-SPECIFIC: Prescription image ===== */
+    .prescription-image-preview {
+      max-width: 180px;
+      max-height: 180px;
+      border: 2px dashed #b2dfcc;
+      border-radius: 10px;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    /* ===== DOCTOR-SPECIFIC: Camera debug ===== */
+    .debug-info {
+      font-size: 12px;
+      padding: 10px;
+      background: #f7fafc;
+      border-radius: 8px;
+      margin-top: 10px;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* ===== DASHBOARD SPECIFIC STYLES ===== */
+    .stat-card {
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+    .activity-item {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #f0f4f8;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .activity-item:last-child {
+      border-bottom: none;
+    }
+    .activity-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #eef2ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+    }
+    .recent-patient-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid #f0f4f8;
+    }
+    .recent-patient-item:last-child {
+      border-bottom: none;
+    }
+    .consult-btn {
+      background: none;
+      border: 1px solid #e0e7ef;
+      border-radius: 20px;
+      padding: 0.25rem 0.8rem;
+      font-size: 0.7rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .consult-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="layout">
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar" id="sidebarMenu">
+      <div class="sidebar-brand">
+        <div class="brand-icon"><i class="bi bi-heart-pulse-fill"></i></div>
+        <h5>MediCare</h5>
+        <p>Doctor Portal</p>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <button class="sidebar-link active" onclick="showSection('dashboard', event)">
+          <i class="bi bi-speedometer2"></i> Dashboard
+        </button>
+        <button class="sidebar-link" onclick="showSection('profile', event)">
+          <i class="bi bi-person-badge"></i> My Profile
+        </button>
+        <button class="sidebar-link" onclick="showSection('patients', event)">
+          <i class="bi bi-people"></i> My Patients
+        </button>
+        <div class="nav-section-label">Tools</div>
+        <button class="sidebar-link" onclick="showSection('appointments', event)">
+          <i class="bi bi-qr-code-scan"></i> QR Scanner
+        </button>
+        <button class="sidebar-link" onclick="showSection('schedule', event)">
+          <i class="bi bi-shield-check"></i> Hash Verification
+        </button>
+        <button class="sidebar-link" onclick="showSection('check-patient', event)">
+          <i class="bi bi-clipboard-check"></i> Check Patient
+        </button>
+        <button class="sidebar-link" onclick="showSection('updated-records', event)">
+          <i class="bi bi-clock-history"></i> Updated Records
+        </button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-user mb-2">
+          <div class="avatar"><i class="bi bi-person-fill"></i></div>
+          <div class="user-info">
+            <div class="user-name">Dr. {{ doctor.full_name }}</div>
+            <div class="user-role">{{ doctor.specialization }}</div>
+          </div>
+        </div>
+        <a href="{% url 'log_out' %}" class="sidebar-link text-danger-link">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </a>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content">
+      <div class="main-inner">
+
+        <button class="mobile-toggle d-md-none" onclick="toggleSidebar()">
+          <i class="bi bi-list"></i> Menu
+        </button>
+
+        <!-- ===== DASHBOARD ===== (UPDATED WITH DYNAMIC DATA & PROPER SECTIONS) -->
+        <div id="dashboard" class="content-section active">
+          <div class="topbar">
+            <div class="topbar-title">
+              <h2>Doctor Dashboard</h2>
+              <p>Welcome back, Dr. {{ doctor.full_name }}</p>
+            </div>
+          </div>
+
+          <!-- Stats Cards (Clickable, Dynamic Counts) -->
+          <div class="stats-grid">
+            <div class="stat-card" style="--accent:#0cb76b; --icon-bg:#e6f9f1; --icon-color:#0cb76b;" onclick="window.location.href='#patients'">
+              <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+              <div class="stat-label">Total Patients</div>
+              <div class="stat-value">{{ accepted_requests|length }}</div>
+              <div class="stat-sub">Under care</div>
+            </div>
+            <div class="stat-card" style="--accent:#3b82f6; --icon-bg:#e8f0fe; --icon-color:#3b82f6;" onclick="showTodayAppointments()">
+              <div class="stat-icon"><i class="bi bi-calendar-check-fill"></i></div>
+              <div class="stat-label">Today's Appointments</div>
+              <div class="stat-value">{{ today_appointments_count|default:"0" }}</div>
+              <div class="stat-sub">Scheduled</div>
+            </div>
+            <div class="stat-card" style="--accent:#f59e0b; --icon-bg:#fff8e6; --icon-color:#e6a800;" onclick="showPendingRequests()">
+              <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
+              <div class="stat-label">Pending Requests</div>
+              <div class="stat-value">{{ pending_requests|length }}</div>
+              <div class="stat-sub">Awaiting action</div>
+            </div>
+          </div>
+
+          <!-- Main Dashboard Grid: 2 columns -->
+          <div class="row g-4 mt-1">
+            <!-- LEFT COLUMN: Pending Requests & Recent Patients -->
+            <div class="col-12 col-lg-6">
+              <!-- Pending Patient Requests (Most Important) -->
+              <div class="panel mb-4">
+                <div class="panel-header header-warning">
+                  <h5><i class="bi bi-bell-fill"></i> Pending Patient Requests</h5>
+                  <span class="badge-pill badge-warning">{{ pending_requests|length }} pending</span>
+                </div>
+                <div class="panel-body" style="padding:0;">
+                  {% if pending_requests %}
+                  <div class="table-responsive">
+                    <table class="data-table">
+                      <thead>
+                        <tr><th>Patient Name</th><th>Request Date</th><th>Actions</th></tr>
+                      </thead>
+                      <tbody>
+                        {% for req in pending_requests %}
+                        <tr>
+                          <td><strong>{{ req.patient.full_name }}</strong><br><small class="text-muted">{{ req.patient.email }}</small></td>
+                          <td style="color:#6b7a8d;">{{ req.created_at|date:"M d, Y" }}</td>
+                          <td>
+                            <div class="d-flex gap-2">
+                              <a href="{% url 'accept_request' req.id %}" class="topbar-btn btn-primary-filled" style="padding:0.3rem 0.7rem; font-size:0.75rem;"><i class="bi bi-check-circle-fill"></i> Accept</a>
+                              <a href="{% url 'reject_request' req.id %}" class="topbar-btn" style="padding:0.3rem 0.7rem; font-size:0.75rem; color:#d03030; border-color:#ffd0d0;"><i class="bi bi-x-circle-fill"></i> Reject</a>
+                            </div>
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                  {% else %}
+                  <div class="empty-state"><i class="bi bi-check-circle-fill text-success"></i><p>No pending requests</p></div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Recent Patients -->
+              <div class="panel">
+                <div class="panel-header header-success">
+                  <h5><i class="bi bi-person-clock-fill"></i> Recent Patients</h5>
+                  <span class="badge-pill badge-success">Last 5</span>
+                </div>
+                <div class="panel-body">
+                  {% if accepted_requests %}
+                    {% for req in accepted_requests|slice:":5" %}
+                    <div class="recent-patient-item">
+                      <div>
+                        <strong>{{ req.patient.full_name }}</strong>
+                        <div class="small text-muted">{{ req.patient.disease|default:"No condition" }}</div>
+                      </div>
+                      <div>
+                        <button class="consult-btn" onclick="selectPatientForUpdate('{{ req.patient.id }}', '{{ req.patient.full_name }}')">
+                          <i class="bi bi-pencil-square"></i> Update
+                        </button>
+                        <button class="consult-btn ms-2" onclick="window.location.href='{% url 'patient_info' req.patient.id %}'">
+                          <i class="bi bi-eye"></i> View
+                        </button>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  {% else %}
+                    <div class="empty-state"><i class="bi bi-people"></i><p>No patients yet</p></div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Today's Appointments & Recent Activity -->
+            <div class="col-12 col-lg-6">
+              <!-- Today's Appointments / Schedule -->
+              <div class="panel mb-4">
+                <div class="panel-header header-info">
+                  <h5><i class="bi bi-calendar-event-fill"></i> Today's Appointments</h5>
+                  <span class="badge-pill badge-info">{{ today_appointments|length }} today</span>
+                </div>
+                <div class="panel-body" style="padding:0;">
+                  {% if today_appointments %}
+                  <div class="table-responsive">
+                    <table class="data-table">
+                      <thead><tr><th>Patient</th><th>Time</th><th>Status</th><th>Action</th></tr></thead>
+                      <tbody>
+                        {% for apt in today_appointments %}
+                        <tr>
+                          <td><strong>{{ apt.patient_name }}</strong></td>
+                          <td>{{ apt.time_slot }}</td>
+                          <td><span class="badge-pill badge-success">{{ apt.status }}</span></td>
+                          <td><button class="consult-btn" onclick="startConsultation('{{ apt.patient_id }}')"><i class="bi bi-camera-video"></i> Start</button></td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                  {% else %}
+                  <div class="empty-state"><i class="bi bi-calendar-x"></i><p>No appointments scheduled for today</p></div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Recent Activity / Updates -->
+              <div class="panel">
+                <div class="panel-header">
+                  <h5><i class="bi bi-clock-history"></i> Recent Activity</h5>
+                </div>
+                <div class="panel-body">
+                  {% if recent_activities %}
+                    {% for activity in recent_activities %}
+                    <div class="activity-item">
+                      <div class="activity-icon"><i class="bi {{ activity.icon }}"></i></div>
+                      <div>
+                        <div><strong>{{ activity.title }}</strong></div>
+                        <div class="small text-muted">{{ activity.description }} • {{ activity.time_ago }}</div>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  {% else %}
+                    <div class="empty-state"><i class="bi bi-activity"></i><p>No recent activity</p></div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== PROFILE ===== (unchanged) -->
+        <div id="profile" class="content-section">
+          <div class="topbar">
+            <div class="topbar-title">
+              <h2>My Profile</h2>
+              <p>Your professional information</p>
+            </div>
+            
+          </div>
+          <div class="row g-4">
+            <div class="col-12 col-lg-4">
+              <div class="panel">
+                <div class="panel-header">
+                  <h5><i class="bi bi-person-circle"></i> Photo</h5>
+                </div>
+                <div class="panel-body text-center">
+                  <div class="profile-avatar-wrap">
+                    {% if doctor.photo %}
+                    <img src="{{ doctor.photo.url }}" alt="Doctor Photo" />
+                    {% else %}
+                    <i class="bi bi-person-circle"></i>
+                    {% endif %}
+                  </div>
+                  <h5 style="font-weight:700; color:#1a2332;">Dr. {{ doctor.full_name }}</h5>
+                  <span class="doctor-badge">{{ doctor.specialization }}</span>
+                  <div class="mt-3" style="font-size:0.85rem; color:#8896a5;">
+                    <i class="bi bi-award-fill text-warning me-1"></i> {{ doctor.experience }} years experience
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-lg-8">
+              <div class="panel">
+                <div class="panel-header">
+                  <h5><i class="bi bi-card-list"></i> Professional Information</h5>
+                </div>
+                <div class="panel-body">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="profile-field"><label>Full Name</label>
+                        <p>Dr. {{ doctor.full_name }}</p>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="profile-field"><label>Email</label>
+                        <p>{{ doctor.email }}</p>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="profile-field"><label>Phone</label>
+                        <p>{{ doctor.phone }}</p>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="profile-field"><label>Specialization</label>
+                        <p>{{ doctor.specialization }}</p>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="profile-field"><label>Experience</label>
+                        <p>{{ doctor.experience }} years</p>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="profile-field"><label>Member Since</label>
+                        <p>{{ doctor.created_at|date:"M d, Y" }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== PATIENTS ===== (unchanged but references updated) -->
+        <div id="patients" class="content-section">
+          <div class="topbar">
+            <div class="topbar-title">
+              <h2>My Patients</h2>
+              <p>Manage patient requests and records</p>
+            </div>
+            <div class="topbar-actions">
+              <button class="topbar-btn btn-primary-filled">
+                <i class="bi bi-person-plus-fill"></i> Add New Patient
+              </button>
+            </div>
+          </div>
+
+          <div class="panel mb-4">
+            <div class="panel-header header-warning">
+              <h5><i class="bi bi-bell-fill"></i> Pending Patient Requests</h5>
+            </div>
+            <div class="panel-body" style="padding:0;">
+              {% if pending_requests %}
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr><th>Patient Name</th><th>Email</th><th>Request Date</th><th>Status</th><th>Actions</th></tr>
+                  </thead>
+                  <tbody>
+                    {% for req in pending_requests %}
+                    <tr>
+                      <td><strong>{{ req.patient.full_name }}</strong></td>
+                      <td style="color:#6b7a8d;">{{ req.patient.email }}</td>
+                      <td style="color:#6b7a8d;">{{ req.created_at|date:"M d, Y" }}</td>
+                      <td><span class="badge-pill badge-warning"><i class="bi bi-circle-fill" style="font-size:6px;"></i> Pending</span></td>
+                      <td>
+                        <div class="d-flex gap-2">
+                          <a href="{% url 'accept_request' req.id %}" class="topbar-btn btn-primary-filled" style="padding:0.35rem 0.8rem; font-size:0.8rem; border-radius:8px;"><i class="bi bi-check-circle-fill"></i> Accept</a>
+                          <a href="{% url 'reject_request' req.id %}" class="topbar-btn" style="padding:0.35rem 0.8rem; font-size:0.8rem; border-radius:8px; color:#d03030; border-color:#ffd0d0;"><i class="bi bi-x-circle-fill"></i> Reject</a>
+                        </div>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              {% else %}
+              <div class="empty-state"><i class="bi bi-inbox"></i><p>No pending patient requests</p></div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header header-success">
+              <h5><i class="bi bi-person-check-fill"></i> Accepted Patients</h5>
+            </div>
+            <div class="panel-body" style="padding:0;">
+              {% if accepted_requests %}
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead><tr><th>Patient Name</th><th>Email</th><th>Disease / Condition</th><th>Status</th><th>Actions</th></tr></thead>
+                  <tbody>
+                    {% for req in accepted_requests %}
+                    <tr>
+                      <td><strong>{{ req.patient.full_name }}</strong></td>
+                      <td style="color:#6b7a8d;">{{ req.patient.email }}</td>
+                      <td>{{ req.patient.disease|default:"Not specified" }}</td>
+                      <td><span class="badge-pill badge-success"><i class="bi bi-circle-fill" style="font-size:6px;"></i> Accepted</span></td>
+                      <td>
+                        {% if req.patient.blockchain_hash %}
+                        <a href="{% url 'patient_info' req.patient.id %}" class="topbar-btn btn-primary-filled" style="padding:0.35rem 0.85rem; font-size:0.8rem; border-radius:8px;"><i class="bi bi-qr-code"></i> View QR &amp; Hash</a>
+                        {% else %}
+                        <span class="badge-pill badge-info"><i class="bi bi-hourglass-split"></i> Awaiting data</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              {% else %}
+              <div class="empty-state"><i class="bi bi-people"></i><p>No accepted patients yet</p></div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== CHECK PATIENT ===== (unchanged) -->
+        <div id="check-patient" class="content-section">
+          <div class="topbar">
+            <div class="topbar-title">
+              <h2>Check Patient</h2>
+              <p>Select a patient and update their record</p>
+            </div>
+          </div>
+
+          <div class="panel mb-4">
+            <div class="panel-header">
+              <h5><i class="bi bi-person-lines-fill"></i> Select a Patient</h5>
+            </div>
+            <div class="panel-body">
+              <div class="row g-3">
+                {% if accepted_requests %}
+                {% for req in accepted_requests %}
+                <div class="col-md-6 col-lg-4">
+                  <div class="patient-card" onclick="selectPatient('{{ req.patient.id }}', '{{ req.patient.full_name }}')" id="patient-card-{{ req.patient.id }}">
+                    <div class="d-flex align-items-center gap-3">
+                      <div class="patient-avatar">
+                        {% if req.patient.photo %}
+                        <img src="{{ req.patient.photo.url }}" alt="Patient" />
+                        {% else %}
+                        <i class="bi bi-person"></i>
+                        {% endif %}
+                      </div>
+                      <div>
+                        <div style="font-weight:700; color:#1a2332; font-size:0.9rem;">{{ req.patient.full_name }}</div>
+                        <div style="font-size:0.78rem; color:#8896a5;">{{ req.patient.email }}</div>
+                        <div style="font-size:0.78rem; color:#6b7a8d; margin-top:2px;">{{ req.patient.disease|default:"No condition specified" }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="col-12"><div class="empty-state"><i class="bi bi-person-x"></i><p>You don't have any accepted patients yet. Accept patient requests to start managing their records.</p></div></div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" id="patient-update-form" style="display:none;">
+            <div class="panel-header">
+              <h5><i class="bi bi-file-earmark-medical-fill"></i> <span id="patient-form-title">Update Patient Record</span></h5>
+              <button type="submit" form="patient-record-form" class="topbar-btn btn-primary-filled"><i class="bi bi-save-fill"></i> Save Record</button>
+            </div>
+            <div class="panel-body">
+              <form id="patient-record-form" action="{% url 'save_patient_record' %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" id="patient_id" name="patient_id" />
+                <input type="hidden" id="doctor_id" name="doctor_id" value="{{ doctor.id }}" />
+                <div class="mb-4">
+                  <div class="form-section-title"><i class="bi bi-calendar-event-fill"></i> Visit Information</div>
+                  <div class="row g-3">
+                    <div class="col-md-6"><label class="form-label">Visit Date</label><input type="date" class="form-control" id="visit_date" name="visit_date" required /></div>
+                    <div class="col-md-6"><label class="form-label">Follow-up Date</label><input type="date" class="form-control" id="follow_up_date" name="follow_up_date" /></div>
+                  </div>
+                </div>
+                <div class="mb-4">
+                  <div class="form-section-title"><i class="bi bi-clipboard-pulse-fill"></i> Symptoms &amp; Diagnosis</div>
+                  <div class="mb-3"><label class="form-label">Symptoms</label><textarea class="form-control" id="symptoms" name="symptoms" rows="3" placeholder="Describe patient symptoms..."></textarea></div>
+                  <div class="mb-3"><label class="form-label">Diagnosis</label><textarea class="form-control" id="diagnosis" name="diagnosis" rows="3" placeholder="Enter diagnosis..."></textarea></div>
+                </div>
+                <div class="mb-4">
+                  <div class="form-section-title"><i class="bi bi-file-medical-fill"></i> Tests &amp; Prescription</div>
+                  <div class="mb-3"><label class="form-label">Recommended Tests</label><textarea class="form-control" id="tests" name="tests" rows="2" placeholder="List recommended tests..."></textarea></div>
+                  <div class="mb-3"><label class="form-label">Prescription</label><textarea class="form-control" id="prescription" name="prescription" rows="4" placeholder="Write prescription details..."></textarea></div>
+                </div>
+                <div class="mb-4">
+                  <div class="form-section-title"><i class="bi bi-sticky-fill"></i> Additional Information</div>
+                  <div class="mb-3"><label class="form-label">Doctor's Notes</label><textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Add any additional notes..."></textarea></div>
+                  <div class="mb-3"><label class="form-label">Prescription Image (PNG/JPG)</label><input type="file" class="form-control" id="prescription_image" name="prescription_image" accept=".png,.jpg,.jpeg" /><div class="form-text mt-1" style="color:#8896a5;">Upload an image of the written prescription (optional)</div><img id="prescription-image-preview" class="prescription-image-preview" alt="Prescription Preview" /></div>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                  <button type="reset" class="topbar-btn">Reset Form</button>
+                  <button type="submit" class="topbar-btn btn-primary-filled"><i class="bi bi-save-fill"></i> Save Patient Record</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== QR SCANNER ===== (unchanged) -->
+        <div id="appointments" class="content-section">
+          <div class="topbar">
+            <div class="topbar-title">
+              <h2>QR Code Scanner</h2>
+              <p>Scan patient QR codes using your camera</p>
+            </div>
+            <div class="topbar-actions">
+              <button class="topbar-btn" onclick="checkCameraSupport()"><i class="bi bi-camera-fill"></i> Check Camera</button>
+            </div>
+          </div>
+          <div class="row g-4">
+            <div class="col-12 col-lg-6">
+              <div class="panel">
+                <div class="panel-header"><h5><i class="bi bi-camera-video-fill"></i> Live Camera Scan</h5></div>
+                <div class="panel-body text-center">
+                  <div id="scanner-container">
+                    <video id="qr-video" muted playsinline style="display:none;"></video>
+                    <div id="qr-placeholder" style="width:100%;height:280px;background:#1a2332;border-radius:12px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);flex-direction:column;gap:0.75rem;"><i class="bi bi-camera-video" style="font-size:3rem;"></i><span style="font-size:0.85rem;">Camera preview</span></div>
+                  </div>
+                  <div class="camera-controls">
+                    <button class="topbar-btn btn-primary-filled" onclick="startScanner()"><i class="bi bi-play-circle-fill"></i> Start Scanner</button>
+                    <button class="topbar-btn" onclick="stopScanner()" style="color:#d03030; border-color:#ffd0d0;"><i class="bi bi-stop-circle-fill"></i> Stop</button>
+                  </div>
+                  <div class="mt-3"><select id="camera-select" class="form-select"><option value="">Select Camera</option></select></div>
+                  <div id="camera-debug" class="debug-info mt-3" style="display:none;"></div>
+                  <small class="text-muted d-block mt-2" style="font-size:0.78rem;"><i class="bi bi-info-circle me-1"></i> Hold patient QR in front of camera</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-lg-6">
+              <div class="panel">
+                <div class="panel-header header-success"><h5><i class="bi bi-person-badge-fill"></i> Patient Information</h5></div>
+                <div class="panel-body"><div id="scanner-results"><div class="empty-state"><i class="bi bi-qr-code-scan"></i><p>Scan a QR code to view patient data</p></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== HASH VERIFICATION ===== (unchanged) -->
+        <div id="schedule" class="content-section">
+          <div class="topbar">
+            <div class="topbar-title"><h2>Hash Verification</h2><p>Verify patient data integrity on blockchain</p></div>
+            <div class="topbar-actions"><button class="topbar-btn btn-primary-filled" onclick="verifyHash()"><i class="bi bi-shield-check-fill"></i> Verify Hash</button></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><h5><i class="bi bi-shield-lock-fill"></i> Blockchain Hash Verification</h5></div>
+            <div class="panel-body">
+              <div class="hash-verification-container">
+                <div class="text-center mb-4"><div style="width:64px;height:64px;background:var(--primary-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;border:2px solid #b2dfcc;"><i class="bi bi-shield-lock-fill" style="font-size:1.75rem; color:var(--primary);"></i></div><h5 style="font-weight:700; color:#1a2332;">Verify Patient Data</h5><p style="font-size:0.88rem; color:#6b7a8d;">Enter a patient's blockchain hash to verify data integrity</p></div>
+                <div class="mb-4"><label class="form-label">Patient Blockchain Hash</label><input type="text" class="form-control" id="patientHash" placeholder="Enter the 64-character SHA-256 hash..." style="font-family:'Courier New',monospace; font-size:0.85rem;" /><div class="form-text mt-1" style="color:#8896a5;">Enter the 64-character SHA-256 hash from patient's QR code</div></div>
+                <button class="topbar-btn btn-primary-filled w-100 justify-content-center" style="padding:0.75rem;" onclick="verifyHash()"><i class="bi bi-search"></i> Verify on Blockchain</button>
+                <div id="verification-result" class="verification-result"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== UPDATED RECORDS ===== (unchanged) -->
+        <div id="updated-records" class="content-section">
+          <div class="topbar"><div class="topbar-title"><h2>Updated Patient Records</h2><p>Recent doctor-updated QR codes and blockchain hashes</p></div></div>
+          <div class="panel">
+            <div class="panel-header header-info"><h5><i class="bi bi-clock-history"></i> Recent Updated Records</h5><span class="badge-pill badge-info">Latest QR + Hash</span></div>
+            <div class="panel-body" style="padding:0;">
+              {% if visits %}
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead><tr><th>Patient</th><th>Visit Date</th><th>Diagnosis</th><th>QR Code</th><th>Blockchain Hash</th><th>Status</th><th>Action</th></tr></thead>
+                  <tbody>
+                    {% for v in visits %}
+                    <tr>
+                      <td><strong>{{ v.patient.full_name }}</strong></td>
+                      <td style="color:#6b7a8d;">{{ v.visit_date|date:"M d, Y" }}</td>
+                      <td>{{ v.diagnosis|default:"N/A" }}</td>
+                      <td>{% if v.qr_code %}<img src="{{ v.qr_code.url }}" width="64" style="border-radius:8px; border:1.5px solid #edf2f7;" />{% else %}<span style="color:#8896a5; font-size:0.8rem;">No QR</span>{% endif %}</td>
+                      <td><div class="hash-box" style="max-width:180px; font-size:0.7rem;">{{ v.blockchain_hash|default:"-" }}</div></td>
+                      <td>{% if v.sent_to_patient %}<span class="badge-pill badge-success"><i class="bi bi-check-circle-fill"></i> Sent</span>{% else %}<span class="badge-pill badge-warning"><i class="bi bi-clock-history"></i> Not Sent</span>{% endif %}</td>
+                      <td>{% if not v.sent_to_patient %}<a href="{% url 'send_update_to_patient' v.id %}" class="topbar-btn btn-primary-filled" style="padding:0.35rem 0.8rem; font-size:0.8rem; border-radius:8px;"><i class="bi bi-send-fill"></i> Send Update</a>{% else %}<button class="topbar-btn" disabled style="opacity:0.5; cursor:not-allowed; padding:0.35rem 0.8rem; font-size:0.8rem; border-radius:8px;"><i class="bi bi-check2-circle"></i> Sent</button>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              {% else %}<div class="empty-state"><i class="bi bi-clock-history"></i><p>No updated records available.</p></div>{% endif %}
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /main-inner -->
+    </main>
+  </div><!-- /layout -->
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Shared JS -->
+  <script src="{% static 'assets/js/medicare_common.js' %}"></script>
+  <!-- Doctor-specific JS -->
+  <script>
+    /* ============================================================
+       QR SCANNER GLOBALS
+    ============================================================ */
+    let codeReader = null, videoStream = null, selectedDeviceId = null, isScanning = false;
+
+    /* ============================================================
+       NAVIGATION — overrides common showSection to stop scanner
+    ============================================================ */
+    function showSection(sectionId, evt = null) {
+      if (sectionId !== "appointments") stopScanner();
+
+      document.querySelectorAll(".sidebar-link").forEach(l => l.classList.remove("active"));
+      if (evt && evt.currentTarget) evt.currentTarget.classList.add("active");
+
+      document.querySelectorAll(".content-section").forEach(s => s.classList.remove("active"));
+      document.getElementById(sectionId).classList.add("active");
+
+      if (window.innerWidth < 768) toggleSidebar();
+
+      if (sectionId === "appointments") {
+        setTimeout(() => { getCameras(); checkCameraSupport(); }, 100);
+      }
+    }
+
+    /* Dashboard helper functions */
+    function showTodayAppointments() {
+      document.getElementById("dashboard").classList.remove("active");
+      document.getElementById("patients").classList.add("active");
+      // Optional: scroll to appointments section
+    }
+    function showPendingRequests() {
+      document.getElementById("dashboard").classList.remove("active");
+      document.getElementById("patients").classList.add("active");
+    }
+    function selectPatientForUpdate(patientId, patientName) {
+      // Navigate to check-patient and select that patient
+      showSection('check-patient');
+      setTimeout(() => {
+        const patientCard = document.getElementById(`patient-card-${patientId}`);
+        if (patientCard) {
+          patientCard.click();
+        } else {
+          // Fallback: set the selectPatient function manually
+          selectPatient(patientId, patientName);
+        }
+      }, 200);
+    }
+    function startConsultation(patientId) {
+      alert("Starting consultation for patient ID: " + patientId);
+      // In real implementation, redirect to video consultation or update status
+    }
+
+    /* ============================================================
+       CAMERA SUPPORT CHECK (unchanged)
+    ============================================================ */
+    function checkCameraSupport() {
+      const debugDiv = document.getElementById("camera-debug");
+      debugDiv.style.display = "block";
+      const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      const isSecure = window.location.protocol === "https:" || isLocalhost;
+      debugDiv.innerHTML = `<strong>Camera Support Status:</strong><br>• Protocol: ${window.location.protocol}<br>• Hostname: ${window.location.hostname}<br>• Is Secure Context: ${isSecure}<br>• Media Devices API: ${!!navigator.mediaDevices}<br>• GetUserMedia: ${!!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)}<br>• Scanner Active: ${isScanning}`;
+      if (!isSecure) debugDiv.innerHTML += `<br><div class="alert alert-warning p-2 mt-2" style="font-size:0.8rem;"><strong>⚠️ Security Warning:</strong> Camera requires HTTPS or localhost.<br>Access via: <code>http://localhost:8000</code></div>`;
+    }
+
+    async function getCameras() {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(d => d.kind === "videoinput");
+        const cameraSelect = document.getElementById("camera-select");
+        cameraSelect.innerHTML = '<option value="">Select Camera</option>';
+        videoDevices.forEach((device, index) => { const option = document.createElement("option"); option.value = device.deviceId; option.text = device.label || `Camera ${index + 1}`; cameraSelect.appendChild(option); });
+        if (videoDevices.length > 0) { selectedDeviceId = videoDevices[0].deviceId; cameraSelect.value = selectedDeviceId; }
+        cameraSelect.addEventListener("change", function () { selectedDeviceId = this.value; if (isScanning) { stopScanner(); setTimeout(() => startScanner(), 500); } });
+      } catch (err) { console.error("Error getting cameras:", err); }
+    }
+
+    async function startScanner() {
+      const video = document.getElementById("qr-video");
+      const placeholder = document.getElementById("qr-placeholder");
+      const resultsContainer = document.getElementById("scanner-results");
+      const debugDiv = document.getElementById("camera-debug");
+      const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      const isSecure = window.location.protocol === "https:" || isLocalhost;
+      if (!isSecure) { debugDiv.style.display = "block"; debugDiv.innerHTML = `<div class="alert alert-danger p-2" style="font-size:0.8rem;"><strong>Camera access requires HTTPS or localhost.</strong></div>`; return; }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { debugDiv.style.display = "block"; debugDiv.innerHTML = `<div class="alert alert-danger p-2" style="font-size:0.8rem;">Camera API not supported.</div>`; return; }
+      try {
+        stopScanner();
+        const constraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" } };
+        if (selectedDeviceId) constraints.video.deviceId = { exact: selectedDeviceId };
+        videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = videoStream;
+        video.setAttribute("playsinline", true);
+        video.style.display = "block";
+        if (placeholder) placeholder.style.display = "none";
+        await new Promise(resolve => { video.onloadedmetadata = () => { video.play(); resolve(); }; });
+        const { BrowserQRCodeReader } = ZXing;
+        codeReader = new BrowserQRCodeReader();
+        codeReader.decodeFromVideoDevice(selectedDeviceId || undefined, video, (result, err) => {
+          if (result) { displayPatientInfo(result.text); stopScanner(); }
+          if (err && !(err instanceof ZXing.NotFoundException)) console.error("QR error:", err);
+        });
+        isScanning = true;
+        resultsContainer.innerHTML = `<div style="background:var(--primary-light); border:1.5px solid #b2dfcc; border-radius:12px; padding:1rem; text-align:center;"><i class="bi bi-check-circle-fill" style="color:var(--primary); font-size:1.5rem;"></i><div style="font-weight:600; color:#0a5c35; margin-top:0.5rem;">Camera Active</div><div style="font-size:0.8rem; color:#3a7a58; margin-top:0.25rem;">Point camera at patient's QR code to scan.</div></div>`;
+      } catch (error) {
+        let errorMessage = error.message;
+        if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") errorMessage = "Camera permission denied. Please allow camera access in your browser settings.";
+        else if (error.name === "NotFoundError") errorMessage = "No camera found on this device.";
+        else if (error.name === "NotReadableError") errorMessage = "Camera is already in use by another application.";
+        debugDiv.style.display = "block";
+        debugDiv.innerHTML = `<div class="alert alert-danger p-2" style="font-size:0.8rem;"><strong>Camera Error:</strong><br>${errorMessage}</div>`;
+        resultsContainer.innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-triangle-fill" style="color:#d03030;"></i><p>${errorMessage}</p></div>`;
+        video.style.display = "none";
+        if (placeholder) placeholder.style.display = "flex";
+        isScanning = false;
+      }
+    }
+
+    function stopScanner() {
+      const video = document.getElementById("qr-video");
+      const placeholder = document.getElementById("qr-placeholder");
+      if (codeReader) { codeReader.reset(); codeReader = null; }
+      if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
+      if (video) { video.srcObject = null; video.style.display = "none"; }
+      if (placeholder) placeholder.style.display = "flex";
+      isScanning = false;
+    }
+
+function displayPatientInfo(qrData) {
+  const resultsContainer = document.getElementById("scanner-results");
+  try {
+    const data = JSON.parse(qrData);
+
+    // New QR format: patient_id + blockchain_hash + url
+    if (data.patient_id && data.url) {
+      resultsContainer.innerHTML = `
+        <div class="patient-info-card">
+          <h6 style="font-weight:700;color:#1a2332;margin-bottom:1rem;display:flex;align-items:center;gap:8px;">
+            <i class="bi bi-qr-code-scan" style="color:var(--primary);"></i> QR Scanned Successfully
+          </h6>
+          <div class="info-item"><strong style="font-size:.72rem;text-transform:uppercase;color:#8896a5;">Patient ID</strong><div style="font-size:.88rem;font-weight:600;color:#1a2332;margin-top:2px;">#${data.patient_id}</div></div>
+          <div class="info-item"><strong style="font-size:.72rem;text-transform:uppercase;color:#8896a5;">Blockchain Hash</strong><div class="hash-box mt-1">${data.blockchain_hash}</div></div>
+          <div class="d-flex gap-2 mt-3 flex-wrap">
+            <a href="${data.url}" target="_blank" class="topbar-btn btn-primary-filled" style="font-size:.8rem;padding:.4rem .9rem;text-decoration:none;">
+              <i class="bi bi-eye"></i> View Full Record
+            </a>
+            <button class="topbar-btn" style="font-size:.8rem;padding:.4rem .9rem;"
+              onclick="verifyScannedHash('${data.blockchain_hash}')">
+              <i class="bi bi-shield-check"></i> Verify Hash
+            </button>
+            <button class="topbar-btn" style="font-size:.8rem;padding:.4rem .9rem;"
+              onclick="startScanner()">
+              <i class="bi bi-camera"></i> Scan Another
+            </button>
+          </div>
+        </div>`;
+    } else {
+      // Fallback for old QR format
+      resultsContainer.innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-triangle-fill" style="color:#e6a800;"></i><p>Old QR format detected. Ask patient to regenerate their QR.</p></div>`;
+    }
+  } catch (error) {
+    resultsContainer.innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-triangle-fill" style="color:#d03030;"></i><p>Invalid QR Code. Please try again.</p><button class="topbar-btn btn-primary-filled mt-2" style="font-size:0.8rem;" onclick="startScanner()"><i class="bi bi-camera"></i> Try Again</button></div>`;
+  }
+}
+
+// helper — renders one label/value pair
+function field(label, value, fullWidth = false) {
+  if (!value || value === "None" || value === "null") return "";
+  return `
+    <div class="${fullWidth ? 'col-12' : 'col-6'}">
+      <div class="info-item">
+        <strong style="font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;color:#8896a5;">${label}</strong>
+        <div style="font-size:.88rem;color:#1a2332;font-weight:500;margin-top:2px;">${value}</div>
+      </div>
+    </div>`;
+}
+
+    function verifyScannedHash(hash) {
+      if (!hash) { alert("No hash found in scanned data"); return; }
+      document.getElementById("patientHash").value = hash;
+      showSection("schedule");
+      setTimeout(verifyHash, 500);
+    }
+
+    function selectPatient(patientId, patientName) {
+      document.querySelectorAll(".patient-card").forEach(c => c.classList.remove("selected"));
+      document.getElementById(`patient-card-${patientId}`).classList.add("selected");
+      document.getElementById("patient_id").value = patientId;
+      document.getElementById("patient-form-title").textContent = `Update Record for ${patientName}`;
+      document.getElementById("patient-update-form").style.display = "block";
+      const today = new Date().toISOString().split("T")[0];
+      document.getElementById("visit_date").value = today;
+      const followUp = new Date();
+      followUp.setDate(followUp.getDate() + 7);
+      document.getElementById("follow_up_date").value = followUp.toISOString().split("T")[0];
+      document.getElementById("patient-update-form").scrollIntoView({ behavior: "smooth" });
+    }
+
+    function verifyHash() {
+      const hash = document.getElementById("patientHash").value.trim();
+      const result = document.getElementById("verification-result");
+      if (!hash) { result.innerHTML = `<div class="alert alert-warning" style="border-radius:12px;">Please enter a hash to verify</div>`; result.style.display = "block"; return; }
+      if (hash.length !== 64) { result.innerHTML = `<div class="alert alert-danger" style="border-radius:12px;">Invalid SHA-256 hash length (should be 64 characters)</div>`; result.style.display = "block"; return; }
+      result.innerHTML = `<div style="background:#e8f0fe; border:1.5px solid #c4d4fd; border-radius:12px; padding:1rem; display:flex; align-items:center; gap:12px;"><i class="bi bi-hourglass-split" style="color:#3b6ef0; font-size:1.3rem;"></i><div><strong style="color:#1a3a8a;">Verifying on blockchain...</strong><br><small style="color:#4a5568;">Checking data integrity...</small></div></div>`;
+      result.style.display = "block";
+      setTimeout(() => {
+        const isHashValid = Math.random() > 0.3;
+        if (isHashValid) { result.innerHTML = `<div style="background:var(--primary-light); border:1.5px solid #b2dfcc; border-radius:12px; padding:1.25rem;"><div style="display:flex; align-items:center; gap:10px; margin-bottom:0.75rem;"><i class="bi bi-shield-check-fill" style="color:var(--primary); font-size:1.4rem;"></i><strong style="color:#0a5c35; font-size:1rem;">✓ Hash Verified Successfully</strong></div><p style="font-size:0.82rem; color:#3a7a58; margin-bottom:0.75rem;">Data integrity confirmed on blockchain</p><div class="hash-box">${hash}</div><button class="copy-btn mt-2" onclick="copyToClipboard('${hash}')"><i class="bi bi-copy"></i> Copy Hash</button></div>`; }
+        else { result.innerHTML = `<div style="background:#fff0f0; border:1.5px solid #ffd0d0; border-radius:12px; padding:1.25rem;"><div style="display:flex; align-items:center; gap:10px;"><i class="bi bi-shield-exclamation-fill" style="color:#d03030; font-size:1.4rem;"></i><div><strong style="color:#d03030;">✗ Hash Verification Failed</strong><p style="font-size:0.82rem; color:#a03030; margin:0.25rem 0 0;">Data may have been tampered with or doesn't exist on blockchain.</p></div></div></div>`; }
+      }, 1500);
+    }
+
+    function copyToClipboard(text) { navigator.clipboard.writeText(text).then(() => alert("Hash copied to clipboard!")); }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const imgInput = document.getElementById("prescription_image");
+      if (imgInput) {
+        imgInput.addEventListener("change", (e) => {
+          const f = e.target.files[0];
+          if (!f) return;
+          const r = new FileReader();
+          r.onload = (ev) => { const img = document.getElementById("prescription-image-preview"); img.src = ev.target.result; img.style.display = "block"; };
+          r.readAsDataURL(f);
+        });
+      }
+      const form = document.getElementById("patient-record-form");
+      if (form) {
+        form.addEventListener("submit", function () {
+          const btn = this.querySelector("button[type='submit']");
+          if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Saving...'; }
+        });
+      }
+    });
+
+    document.addEventListener("visibilitychange", function () { if (document.hidden) stopScanner(); });
+    window.addEventListener("beforeunload", function () { stopScanner(); });
+  </script>
+  {% if messages %}
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        {% for message in messages %}
+          Swal.fire({
+            title: "{{ message|escapejs }}",
+            icon: "{{ message.tags }}",
+            confirmButtonText: "OK"
+          });
+        {% endfor %}
+      });
+    </script>
+    {% endif %}
+</body>
+
+</html>

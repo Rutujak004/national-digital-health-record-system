@@ -1,0 +1,315 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medical History — MediCare</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+  <style>
+    :root {
+      --primary: #0cb76b;
+      --primary-dark: #089a58;
+      --primary-light: #e6f9f1;
+      --text-main: #1a2332;
+      --text-muted: #8896a5;
+      --border: #edf2f7;
+      --shadow: 0 4px 24px rgba(12,183,107,0.08);
+      --hover-shadow: 0 8px 32px rgba(12,183,107,0.14);
+      --radius: 16px;
+      --transition: all 0.22s cubic-bezier(.4,0,.2,1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #f4f7fa; font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text-main); min-height: 100vh; }
+
+    /* ── BANNER ── */
+    .top-banner {
+      background: linear-gradient(135deg, #0cb76b 0%, #089a58 100%);
+      padding: 2rem 0 3.5rem;
+      position: relative; overflow: hidden;
+    }
+    .top-banner::before {
+      content:''; position:absolute; right:-60px; top:-60px;
+      width:280px; height:280px; border-radius:50%;
+      background:rgba(255,255,255,0.07);
+    }
+    .top-banner::after {
+      content:''; position:absolute; left:-40px; bottom:-80px;
+      width:200px; height:200px; border-radius:50%;
+      background:rgba(255,255,255,0.05);
+    }
+    .banner-inner { max-width:960px; margin:0 auto; padding:0 1.5rem; position:relative; z-index:1; }
+    .banner-brand { display:flex; align-items:center; gap:10px; margin-bottom:1.25rem; }
+    .banner-brand .brand-icon {
+      width:38px; height:38px; background:rgba(255,255,255,0.18);
+      border-radius:10px; display:flex; align-items:center; justify-content:center;
+      font-size:1.1rem; color:white; backdrop-filter:blur(6px);
+    }
+    .banner-brand span { font-size:1rem; font-weight:700; color:rgba(255,255,255,0.95); }
+    .banner-title { font-size:1.65rem; font-weight:800; color:white; letter-spacing:-0.5px; }
+    .banner-sub { font-size:0.88rem; color:rgba(255,255,255,0.78); margin-top:4px; }
+    .btn-back {
+      background:rgba(255,255,255,0.18); color:white;
+      border:1.5px solid rgba(255,255,255,0.35);
+      padding:.45rem 1rem; border-radius:9px;
+      font-size:.8rem; font-weight:600;
+      display:inline-flex; align-items:center; gap:6px;
+      text-decoration:none; transition:var(--transition); backdrop-filter:blur(6px);
+    }
+    .btn-back:hover { background:rgba(255,255,255,0.28); color:white; }
+
+    /* ── PAGE WRAP ── */
+    .page-wrap { max-width:960px; margin:-2.25rem auto 2.5rem; padding:0 1.5rem; }
+
+    /* ── PATIENT SUMMARY CARD ── */
+    .summary-card {
+      background:white; border-radius:var(--radius);
+      border:1.5px solid var(--border); box-shadow:var(--shadow);
+      padding:1.4rem 1.5rem; margin-bottom:1.5rem;
+      display:flex; align-items:center; gap:1.25rem; flex-wrap:wrap;
+    }
+    .avatar-circle {
+      width:64px; height:64px; border-radius:50%;
+      background:linear-gradient(135deg, var(--primary-light), #b2dfcc);
+      border:3px solid var(--primary);
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.6rem; font-weight:800; color:var(--primary); flex-shrink:0;
+      box-shadow:0 0 0 5px rgba(12,183,107,0.1);
+    }
+    .summary-name { font-size:1.2rem; font-weight:800; color:var(--text-main); letter-spacing:-0.3px; }
+    .summary-id { font-size:.8rem; color:var(--text-muted); margin-top:3px; }
+    .hash-snippet {
+      font-family:'Courier New',monospace; font-size:.74rem;
+      background:#f7fafc; border:1.5px solid var(--border);
+      border-radius:8px; padding:4px 10px; color:#4a5568; margin-top:6px;
+      display:inline-block;
+    }
+    .pill {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:4px 12px; border-radius:20px;
+      font-size:.74rem; font-weight:600;
+    }
+    .pill-green  { background:#e6f9f1; color:#0a6640; border:1px solid #b2dfcc; }
+    .pill-blue   { background:#e8f0fe; color:#1a3a8a; border:1px solid #c4d4fd; }
+    .pill-orange { background:#fff8e6; color:#92600a; border:1px solid #f0d080; }
+    .pill-gray   { background:#f0f4f8; color:#6b7a8d; border:1px solid #dce4ed; }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-size:.72rem; font-weight:700; text-transform:uppercase;
+      letter-spacing:.6px; color:var(--text-muted);
+      margin-bottom:1rem; display:flex; align-items:center; gap:7px;
+    }
+    .section-label::after {
+      content:''; flex:1; height:1px; background:var(--border);
+    }
+
+    /* ── TIMELINE ── */
+    .timeline { position:relative; padding-left:2rem; }
+    .timeline::before {
+      content:''; position:absolute; left:15px; top:0; bottom:0;
+      width:2px; background:linear-gradient(to bottom, var(--primary), #b2dfcc);
+      border-radius:2px;
+    }
+    .timeline-item { position:relative; margin-bottom:1.5rem; }
+    .timeline-dot {
+      position:absolute; left:-2rem; top:1rem;
+      width:14px; height:14px; border-radius:50%;
+      background:var(--primary); border:3px solid white;
+      box-shadow:0 0 0 3px rgba(12,183,107,0.2);
+      z-index:1;
+    }
+    .timeline-dot.dot-gray { background:#8896a5; box-shadow:0 0 0 3px rgba(136,150,165,0.2); }
+    .timeline-dot.dot-blue { background:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,0.2); }
+
+    /* ── RECORD CARD ── */
+    .record-card {
+      background:white; border-radius:var(--radius);
+      border:1.5px solid var(--border); box-shadow:0 2px 12px rgba(0,0,0,0.05);
+      overflow:hidden; transition:var(--transition);
+    }
+    .record-card:hover { box-shadow:var(--hover-shadow); border-color:rgba(12,183,107,0.25); }
+    .record-header {
+      padding:.9rem 1.25rem;
+      border-bottom:1.5px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
+      flex-wrap:wrap; gap:.5rem;
+    }
+    .record-header.reg   { background:var(--primary-light); border-bottom-color:#b2dfcc; }
+    .record-header.upd   { background:#f0f4f8; }
+    .record-header.cons  { background:#e8f0fe; border-bottom-color:#c4d4fd; }
+    .record-body { padding:1.1rem 1.25rem; }
+
+    /* ── FIELD ROWS ── */
+    .field-row { display:flex; gap:6px; align-items:flex-start; margin-bottom:.55rem; }
+    .field-row:last-child { margin-bottom:0; }
+    .fl { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--text-muted); min-width:110px; padding-top:2px; flex-shrink:0; }
+    .fv { font-size:.88rem; font-weight:500; color:var(--text-main); }
+    .fv.empty { color:#cbd5e0; font-style:italic; font-weight:400; }
+
+    /* ── HASH BOX ── */
+    .hash-box {
+      background:#f7fafc; border:1.5px solid var(--border); border-radius:8px;
+      padding:.55rem .85rem; font-family:'Courier New',monospace;
+      font-size:.72rem; color:#4a5568; word-break:break-all;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align:center; padding:3.5rem 1rem; color:var(--text-muted);
+    }
+    .empty-state i { font-size:3rem; color:#cbd5e0; display:block; margin-bottom:1rem; }
+    .empty-state p { font-size:.9rem; }
+
+    /* ── DIVIDER ── */
+    .row-divider { display:grid; grid-template-columns:1fr 1fr; gap:0 1.5rem; }
+    @media(max-width:600px){ .row-divider{ grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+
+  <!-- ── BANNER ── -->
+  <div class="top-banner">
+    <div class="banner-inner">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+          <div class="banner-brand">
+            <div class="brand-icon"><i class="bi bi-heart-pulse-fill"></i></div>
+            <span>MediCare</span>
+          </div>
+          <div class="banner-title">Complete Medical History</div>
+          <div class="banner-sub">Full blockchain-verified timeline of patient records</div>
+        </div>
+        {% if source == "doctor" %}
+          <a href="{% url 'doctor_dashboard' %}" class="btn-back"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+        {% elif source == "patient" %}
+          <a href="{% url 'patient_dashboard' %}" class="btn-back"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+        {% else %}
+          <a href="{% url 'admin_dashboard' %}" class="btn-back"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PAGE WRAP ── -->
+  <div class="page-wrap">
+
+    <!-- Patient Summary -->
+    <div class="summary-card">
+      <div class="avatar-circle">{{ patient.full_name|slice:":1"|upper }}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="summary-name">{{ patient.full_name }}</div>
+        <div class="summary-id">Patient ID: #{{ patient.id }} &nbsp;·&nbsp; {{ patient.email }}</div>
+        {% if patient.blockchain_hash %}
+        <div class="hash-snippet"><i class="bi bi-shield-check" style="color:var(--primary);"></i> {{ patient.blockchain_hash|truncatechars:30 }}</div>
+        {% endif %}
+      </div>
+      <div class="d-flex flex-column gap-2 align-items-end">
+        <span class="pill pill-green"><i class="bi bi-shield-check-fill" style="font-size:.7rem;"></i> Blockchain Verified</span>
+        <span class="pill pill-blue"><i class="bi bi-clock-history" style="font-size:.7rem;"></i> {{ complete_history|length }} Records</span>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    {% if complete_history %}
+    <div class="section-label"><i class="bi bi-clock-history" style="color:var(--primary);"></i> Timeline</div>
+
+    <div class="timeline">
+      {% for record in complete_history %}
+      <div class="timeline-item">
+
+        <!-- dot colour by type -->
+        <div class="timeline-dot
+          {% if record.type == 'registration' %}{% elif record.type == 'patient_update' %}dot-gray{% elif record.type == 'consultation' %}dot-blue{% endif %}">
+        </div>
+
+        <div class="record-card">
+
+          <!-- Header -->
+          <div class="record-header
+            {% if record.type == 'registration' %}reg
+            {% elif record.type == 'patient_update' %}upd
+            {% elif record.type == 'consultation' %}cons{% endif %}">
+
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              {% if record.type == "registration" %}
+                <span class="pill pill-green"><i class="bi bi-person-plus-fill" style="font-size:.7rem;"></i> Registration</span>
+              {% elif record.type == "patient_update" %}
+                <span class="pill pill-gray"><i class="bi bi-pencil-fill" style="font-size:.7rem;"></i> Patient Update</span>
+              {% elif record.type == "consultation" %}
+                <span class="pill pill-blue"><i class="bi bi-clipboard2-pulse-fill" style="font-size:.7rem;"></i> Consultation</span>
+              {% endif %}
+              <span style="font-size:.84rem;font-weight:700;color:var(--text-main);">
+                <i class="bi bi-calendar3" style="color:var(--primary);font-size:.78rem;"></i>
+                {{ record.timestamp|slice:":10" }}
+              </span>
+            </div>
+
+            {% if record.blockchain_hash %}
+            <div class="hash-box" style="font-size:.68rem;padding:3px 8px;max-width:220px;">
+              {{ record.blockchain_hash|truncatechars:28 }}
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Body -->
+          <div class="record-body">
+            {% if record.type == "registration" or record.type == "patient_update" %}
+            <div class="row-divider">
+              <div>
+                <div class="field-row"><span class="fl">Full Name</span><span class="fv">{{ record.data.full_name|default:"—" }}</span></div>
+                <div class="field-row"><span class="fl">Age</span><span class="fv">{{ record.data.age|default:"—" }}</span></div>
+                <div class="field-row"><span class="fl">Gender</span><span class="fv">{{ record.data.gender|default:"—" }}</span></div>
+              </div>
+              <div>
+                <div class="field-row"><span class="fl">Condition</span><span class="fv {% if not record.data.disease %}empty{% endif %}">{{ record.data.disease|default:"Not specified" }}</span></div>
+                <div class="field-row"><span class="fl">Doctor</span><span class="fv {% if not record.data.doctor_assigned %}empty{% endif %}">{{ record.data.doctor_assigned|default:"Not assigned" }}</span></div>
+              </div>
+            </div>
+
+            {% elif record.type == "consultation" %}
+            <div class="row-divider mb-2">
+              <div>
+                <div class="field-row"><span class="fl">Doctor</span><span class="fv">Dr. {{ record.doctor_name|default:"N/A" }}</span></div>
+                <div class="field-row"><span class="fl">Symptoms</span><span class="fv {% if not record.data.symptoms %}empty{% endif %}">{{ record.data.symptoms|default:"Not recorded" }}</span></div>
+                <div class="field-row"><span class="fl">Diagnosis</span><span class="fv {% if not record.data.diagnosis %}empty{% endif %}">{{ record.data.diagnosis|default:"Not recorded" }}</span></div>
+              </div>
+              <div>
+                <div class="field-row"><span class="fl">Prescription</span><span class="fv {% if not record.data.prescription %}empty{% endif %}">{{ record.data.prescription|default:"Not recorded" }}</span></div>
+                {% if record.data.tests %}
+                <div class="field-row"><span class="fl">Tests</span><span class="fv">{{ record.data.tests }}</span></div>
+                {% endif %}
+                {% if record.data.notes %}
+                <div class="field-row"><span class="fl">Notes</span><span class="fv">{{ record.data.notes }}</span></div>
+                {% endif %}
+              </div>
+            </div>
+            {% if record.data.prescription_file %}
+            <div style="margin-top:.75rem;">
+              <a href="{{ record.data.prescription_file }}" target="_blank"
+                style="display:inline-flex;align-items:center;gap:6px;padding:.4rem .9rem;border-radius:9px;background:var(--primary-light);color:var(--primary);font-size:.8rem;font-weight:600;text-decoration:none;border:1.5px solid #b2dfcc;transition:var(--transition);">
+                <i class="bi bi-download"></i> Download Prescription
+              </a>
+            </div>
+            {% endif %}
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+      <i class="bi bi-clock-history"></i>
+      <p><strong>No history records found</strong><br>Records will appear here after updates are made.</p>
+    </div>
+    {% endif %}
+
+  </div><!-- /page-wrap -->
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

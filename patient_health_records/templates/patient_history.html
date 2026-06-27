@@ -1,0 +1,205 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patient History | MediCare</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+  <link rel="stylesheet" href="{% static 'assets/css/medicare_common.css' %}">
+</head>
+
+<body>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebarMenu">
+      <div class="sidebar-brand">
+        <div class="brand-icon"><i class="bi bi-shield-plus"></i></div>
+        <h5>MediCare</h5>
+        <p>Blockchain Health Systems</p>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <a href="{% if source == 'patient' %}{% url 'patient_dashboard' %}{% elif source == 'doctor' %}{% url 'doctor_dashboard' %}{% else %}{% url 'admin_dashboard' %}{% endif %}"
+          class="sidebar-link">
+          <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+
+        {% if source == 'admin' %}
+        <div class="nav-section-label">Management</div>
+        <a href="{% url 'admin_dashboard' %}" class="sidebar-link">
+          <i class="bi bi-person-plus"></i> Register Patient
+        </a>
+        <a href="{% url 'admin_dashboard' %}" class="sidebar-link">
+          <i class="bi bi-person-badge"></i> Register Doctor
+        </a>
+        <a href="{% url 'admin_dashboard' %}" class="sidebar-link active">
+          <i class="bi bi-people"></i> All Patients
+        </a>
+        <a href="{% url 'admin_dashboard' %}" class="sidebar-link">
+          <i class="bi bi-person-badge"></i> All Doctors
+        </a>
+        {% endif %}
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-user mb-2">
+          <div class="avatar">{{ patient.full_name|slice:":1"|upper }}</div>
+
+          <div class="user-info">
+            <div class="user-name">{{ patient.full_name.split.0 }}</div>
+            <div class="user-role">{{ patient.full_name }}</div>
+          </div>
+        </div>
+        <a href="{% url 'log_out' %}" class="sidebar-link text-danger-link" style="margin-bottom:0;">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </a>
+      </div>
+    </aside>
+
+    <main class="main-content" id="mainContent">
+      <div class="main-inner">
+
+        <button class="mobile-toggle" onclick="toggleSidebar()">
+          <i class="bi bi-list"></i> Menu
+        </button>
+
+        <div class="topbar">
+          <div class="topbar-title">
+            <h2>Full Medical History</h2>
+            <p>Verified Blockchain Audit Trail for {{ patient.full_name }}</p>
+          </div>
+          <div class="topbar-actions">
+            <button onclick="window.print()" class="topbar-btn">
+              <i class="bi bi-printer"></i> Print Record
+            </button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h5><i class="bi bi-person-vcard"></i> Comprehensive Profile</h5>
+          </div>
+          <div class="panel-body">
+            <div class="row g-4">
+              <div class="col-md-4 text-center border-end">
+                <img
+                  src="https://ui-avatars.com/api/?name={{ patient.full_name|urlencode }}&background=0cb76b&color=fff&size=128"
+                  class="rounded-circle shadow-sm mb-3" style="width:100px;">
+                <h4>{{ patient.full_name }}</h4>
+                <span class="badge-pill badge-success mb-2">{{ patient.gender }} • {{ patient.age }} Years</span>
+              </div>
+
+              <div class="col-md-8">
+                <div class="row">
+                  <div class="col-sm-6 profile-field">
+                    <label>Contact Email</label>
+                    <p>{{ patient.email }}</p>
+                  </div>
+                  <div class="col-sm-6 profile-field">
+                    <label>Phone Number</label>
+                    <p>{{ patient.phone }}</p>
+                  </div>
+                  <div class="col-sm-12 profile-field">
+                    <label>Residential Address</label>
+                    <p>{{ patient.address|default:"No address provided" }}</p>
+                  </div>
+                  <div class="col-sm-6 profile-field">
+                    <label>Primary Condition</label>
+                    <p class="text-primary fw-bold">{{ patient.disease|default:"General Checkup" }}</p>
+                  </div>
+                  <div class="col-sm-6 profile-field">
+                    <label>Assigned Medical Professional</label>
+                    <p>{{ patient.doctor_assigned|default:"Not Assigned" }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel mt-4">
+          <div class="panel-header">
+            <h5><i class="bi bi-shield-check"></i> Verified Update Logs</h5>
+          </div>
+
+          {% if history_records %}
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Updated By</th>
+                  <th>Clinical Notes / Condition</th>
+                  <th>Transaction Hash</th>
+                  <th>Blockchain QR</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for record in history_records %}
+                <tr>
+                  <td style="width: 180px;">
+                    <div class="fw-bold">{{ record.updated_at|date:"d M Y" }}</div>
+                    <small class="text-muted">{{ record.updated_at|date:"h:i A" }}</small>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <i class="bi bi-person-badge text-primary"></i>
+                      <span>{{ record.doctor_assigned|default:"Admin System" }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge-pill badge-info mb-1">{{ record.disease }}</span>
+                    <div style="font-size: 0.8rem; color: #6b7a8d; max-width: 250px;">
+                      Record snapshot saved to immutable ledger.
+                    </div>
+                  </td>
+                  <td>
+                    <div class="hash-box" style="width: 150px;">
+                      {{ record.blockchain_hash|truncatechars:15 }}...
+                      <i class="bi bi-copy ms-1" style="cursor: pointer;" title="Copy Full Hash"></i>
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    {% if record.qr_code %}
+                    <a href="{{ record.qr_code.url }}" target="_blank">
+                      <img src="{{ record.qr_code.url }}"
+                        style="width:50px; height:50px; border-radius:6px; border:1px solid #ddd;">
+                    </a>
+                    {% else %}
+                    <span class="text-muted" style="font-size: 0.7rem;">Legacy Record</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <i class="bi bi-database-exclamation"></i>
+            <p>No historical blockchain records found for this patient.</p>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="mt-4 d-flex justify-content-between align-items-center">
+          <p class="text-muted mb-0" style="font-size: 0.8rem;">
+            <i class="bi bi-info-circle"></i> This data is fetched from Ganache Blockchain Network.
+          </p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{% static 'assets/js/medicare_common.js' %}"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<section id="login" class="contact section" style="min-height: auto; padding: 40px 0;">
+
+  <div class="container section-title" data-aos="fade-up">
+    <h2>Admin Login Here</h2>
+    <p class="text-muted">Secure Administrative Access to Health Records Portal</p>
+  </div><div class="container" data-aos="fade-up" data-aos-delay="100">
+
+    <div class="row gy-3 align-items-center">
+
+      <div class="col-lg-5">
+        <div class="info-wrap text-center">
+          <img src="{% static 'assets/img/login.jpg' %}" alt="Admin Login Image" width="260px"
+            class="img-fluid rounded shadow">
+          <div class="mt-3 p-2 bg-light rounded-3">
+            <i class="fas fa-user-shield fa-2x text-success mb-1"></i>
+            <p class="mb-0 small">Admin Portal · Secure Authentication · System Management</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        <form method="POST" action="" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="row gy-3">
+
+            <div class="col-md-12">
+              <label class="pb-1 fw-semibold">
+                <i class="fas fa-user-circle me-1 text-success"></i> Username *
+              </label>
+              <input type="text" name="username" id="username" class="form-control" placeholder="Enter administrator username"
+                required style="padding: 10px 15px;">
+              <small class="text-muted" style="font-size: 11px;">Enter authorized admin credentials</small>
+            </div>
+
+            <div class="col-md-12">
+              <label class="pb-1 fw-semibold">
+                <i class="fas fa-lock me-1 text-success"></i> Password *
+              </label>
+              <input type="password" name="password" id="password" class="form-control"
+                placeholder="Enter your admin password" required style="padding: 10px 15px;">
+            </div>
+
+            <div class="col-md-12 text-center mt-3">
+              <button type="submit"
+                style="background-color: #10bc69; color: white; padding: 8px 30px; border-radius: 30px; border: none; font-weight: 600; font-size: 14px; transition: all 0.3s ease;"
+                onmouseover="this.style.backgroundColor='#0da05a'; this.style.transform='scale(1.02)'"
+                onmouseout="this.style.backgroundColor='#10bc69'; this.style.transform='scale(1)'">
+                <i class="fas fa-sign-in-alt me-2"></i> Admin Login
+              </button>
+            </div>
+          </div>
+        </form>
+      </div></div>
+  </div>
+
+</section>{% if messages %}
+<div class="container mt-2" data-aos="fade-up" style="margin-bottom: 10px;">
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert"
+    style="padding: 8px 15px; font-size: 13px;">
+    <i class="fas fa-bell me-2"></i> {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
+      style="font-size: 10px;"></button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<style>
+  /* Global and UI Consistency Styles */
+  html, body { height: auto; overflow-y: visible; }
+  .contact .info-wrap { background: #f8f9fa; border-radius: 20px; padding: 20px 15px; box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05); }
+  .contact .form-control { border-radius: 12px; padding: 10px 15px; border: 1px solid #e0e0e0; transition: all 0.3s ease; font-size: 14px; }
+  .contact .form-control:focus { border-color: #10bc69; box-shadow: 0 0 0 3px rgba(16, 188, 105, 0.1); outline: none; }
+  .section-title { margin-bottom: 20px; }
+  .section-title h2 { font-size: 28px; font-weight: 700; position: relative; padding-bottom: 12px; margin-bottom: 5px; }
+  .section-title h2:after { content: ''; position: absolute; display: block; width: 50px; height: 3px; background: #10bc69; bottom: 0; left: calc(50% - 25px); }
+  .section-title .text-muted { font-size: 13px; margin-top: 5px; }
+  button[type="submit"] { box-shadow: 0 4px 12px rgba(16, 188, 105, 0.3); cursor: pointer; }
+  .alert { border-radius: 12px; border: none; }
+  .alert-success { background-color: #d4edda; color: #155724; }
+  .alert-danger { background-color: #f8d7da; color: #721c24; }
+  .gy-3 { --bs-gutter-y: 0.75rem; }
+  body { overflow-x: hidden; }
+  
+  @media (max-width: 768px) {
+    .contact .info-wrap { margin-bottom: 15px; }
+    .section-title h2 { font-size: 24px; }
+  }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const bodyHeight = document.body.scrollHeight;
+    const windowHeight = window.innerHeight;
+    if (bodyHeight <= windowHeight) {
+      document.body.style.overflowY = 'auto';
+    }
+  });
+</script>
+{% endblock body %}

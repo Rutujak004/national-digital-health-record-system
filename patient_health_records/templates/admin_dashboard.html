@@ -1,0 +1,990 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediCare - Admin Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+  <!-- Shared styles -->
+  <link rel="stylesheet" href="{% static 'assets/css/medicare_common.css' %}">
+  <style>
+    /* ===== ADMIN-SPECIFIC: Action buttons for table rows ===== */
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1.5px solid #e0e7ef;
+      background: white;
+      color: #4a5568;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+      margin: 1px;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .action-btn.edit:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .action-btn.delete:hover {
+      border-color: #d03030;
+      color: #d03030;
+      background: #fff0f0;
+    }
+
+    .action-btn.view:hover {
+      border-color: #2b5ce6;
+      color: #2b5ce6;
+      background: #e8f0fe;
+    }
+
+    .action-btn.approve:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .action-btn.reject:hover {
+      border-color: #d03030;
+      color: #d03030;
+      background: #fff0f0;
+    }
+
+    /* ===== ADMIN-SPECIFIC: Search input with icon ===== */
+    .search-wrap {
+      position: relative;
+    }
+
+    .search-wrap i {
+      position: absolute;
+      left: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #8896a5;
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+
+    .search-wrap input {
+      padding-left: 2.2rem;
+    }
+
+    /* ===== ADMIN-SPECIFIC: QR block in patients table ===== */
+    .qr-block {
+      text-align: center;
+    }
+
+    .qr-block img {
+      width: 72px;
+      height: 72px;
+      border-radius: 8px;
+      border: 2px solid #e6f9f1;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: var(--transition);
+    }
+
+    .qr-block img:hover {
+      transform: scale(1.06);
+    }
+
+    /* Reduce row height */
+    .data-table tbody td {
+      padding: 0.55rem 0.7rem;
+      font-size: 0.82rem;
+    }
+
+    /* Make avatar slightly smaller */
+    .user-avatar {
+      width: 30px;
+      height: 30px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="layout">
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar" id="sidebarMenu">
+      <div class="sidebar-brand">
+        <div class="brand-icon"><i class="bi bi-heart-pulse"></i></div>
+        <h5>MediCare Admin</h5>
+        <p>Healthcare Management</p>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <button class="sidebar-link active" onclick="showSection('home', this)">
+          <i class="bi bi-speedometer2"></i> Dashboard
+        </button>
+        <div class="nav-section-label">Management</div>
+        <button class="sidebar-link" onclick="showSection('register-patient', this)">
+          <i class="bi bi-person-plus"></i> Register Patient
+        </button>
+        <button class="sidebar-link" onclick="showSection('register-doctor', this)">
+          <i class="bi bi-person-badge"></i> Register Doctor
+        </button>
+        <button class="sidebar-link" onclick="showSection('patients', this)">
+          <i class="bi bi-people"></i> All Patients
+        </button>
+        <button class="sidebar-link" onclick="showSection('doctors', this)">
+          <i class="bi bi-person-badge"></i> All Doctors
+        </button>
+        <div class="nav-section-label">Operations</div>
+        <button class="sidebar-link" onclick="showSection('appointments', this)">
+          <i class="bi bi-calendar-check"></i> Appointments
+        </button>
+        <button class="sidebar-link" onclick="showSection('reports', this)">
+          <i class="bi bi-graph-up"></i> Reports
+        </button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-user mb-2">
+          <div class="avatar">A</div>
+          <div class="user-info">
+            <div class="user-name">Admin User</div>
+            <div class="user-role">Administrator</div>
+          </div>
+        </div>
+        <a href="{% url 'log_out' %}" class="sidebar-link text-danger-link" style="margin-bottom:0;">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </a>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="main-content" id="mainContent">
+      <div class="main-inner">
+
+        <button class="mobile-toggle" onclick="toggleSidebar()">
+          <i class="bi bi-list"></i> Menu
+        </button>
+
+        <!-- =================== DASHBOARD HOME =================== -->
+        <div id="home" class="content-section active">
+          <div class="topbar">
+            <div class="topbar-title">
+              <h2>Dashboard Overview</h2>
+              <p>Welcome back, Admin — here's what's happening today</p>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card" style="--accent:#0cb76b;">
+              <div class="stat-icon" style="--icon-bg:#e6f9f1;--icon-color:#0cb76b;"><i class="bi bi-people"></i></div>
+              <div class="stat-label">Total Patients</div>
+              <div class="stat-value">{{ total_patients }}</div>
+              <div class="stat-sub">Registered patients</div>
+            </div>
+            <div class="stat-card" style="--accent:#2b5ce6;">
+              <div class="stat-icon" style="--icon-bg:#e8f0fe;--icon-color:#2b5ce6;"><i class="bi bi-person-badge"></i>
+              </div>
+              <div class="stat-label">Total Doctors</div>
+              <div class="stat-value">{{ total_doctors }}</div>
+              <div class="stat-sub">Registered doctors</div>
+            </div>
+            <div class="stat-card" style="--accent:#b07900;">
+
+              <div class="stat-icon" style="--icon-bg:#fff8e6;--icon-color:#b07900;">
+                <i class="bi bi-calendar-check"></i>
+              </div>
+
+              <div class="stat-label">Appointments</div>
+
+              <!-- MAIN VALUE -->
+              <div class="stat-value">{{ total_appointments }}</div>
+
+              <!-- 🔥 NEW SUB INFO -->
+              <div class="stat-sub">
+                {{ total_requests }} Requests • {{ total_appointments }} Confirmed
+              </div>
+
+            </div>
+          </div>
+
+          <div class="row g-4">
+            <div class="col-12 col-lg-6">
+              <div class="panel">
+                <div class="panel-header">
+                  <h5><i class="bi bi-people"></i> Recent Patients</h5>
+                  <button class="topbar-btn" style="font-size:0.8rem;padding:0.4rem 0.85rem;"
+                    onclick="showSection('patients', null)">
+                    View All <i class="bi bi-arrow-right"></i>
+                  </button>
+                </div>
+                {% if all_patients %}
+                <div style="overflow-x:auto;">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Condition</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for patient in all_patients|slice:":5" %}
+                      <tr>
+                        <td>
+                          <div style="display:flex;align-items:center;gap:10px;">
+                            <img
+                              src="https://ui-avatars.com/api/?name={{ patient.full_name|urlencode }}&background=0cb76b&color=fff"
+                              class="user-avatar" alt="Avatar" />
+                            <span style="font-weight:600;color:#1a2332;">{{ patient.full_name }}</span>
+                          </div>
+                        </td>
+                        <td>{{ patient.age }}</td>
+                        <td>{{ patient.disease|default:"Not specified"|truncatewords:3 }}</td>
+                        <td><span class="badge-pill badge-success">Active</span></td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                {% else %}
+                <div class="empty-state"><i class="bi bi-people"></i>
+                  <p>No patients found.</p>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+              <div class="panel">
+                <div class="panel-header">
+                  <h5><i class="bi bi-person-badge"></i> Recent Doctors</h5>
+                  <button class="topbar-btn" style="font-size:0.8rem;padding:0.4rem 0.85rem;"
+                    onclick="showSection('doctors', null)">
+                    View All <i class="bi bi-arrow-right"></i>
+                  </button>
+                </div>
+                {% if all_doctors %}
+                <div style="overflow-x:auto;">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Specialization</th>
+                        <th>Experience</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for doctor in all_doctors|slice:":5" %}
+                      <tr>
+                        <td>
+                          <div style="display:flex;align-items:center;gap:10px;">
+                            {% if doctor.photo %}
+                            <img src="{{ doctor.photo.url }}" class="user-avatar" alt="Doctor Photo" />
+                            {% else %}
+                            <img
+                              src="https://ui-avatars.com/api/?name={{ doctor.full_name|urlencode }}&background=0cb76b&color=fff"
+                              class="user-avatar" alt="Avatar" />
+                            {% endif %}
+                            <span style="font-weight:600;color:#1a2332;">{{ doctor.full_name }}</span>
+                          </div>
+                        </td>
+                        <td>{{ doctor.specialization }}</td>
+                        <td>{{ doctor.experience }} yrs</td>
+                        <td><span class="badge-pill badge-success">Available</span></td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                {% else %}
+                <div class="empty-state"><i class="bi bi-person-badge"></i>
+                  <p>No doctors found.</p>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- =================== REGISTER PATIENT =================== -->
+        <div id="register-patient" class="content-section">
+          <div class="topbar">
+            <div class="topbar-title">
+              <h2>Register New Patient</h2>
+              <p>Fill in the details to add a new patient record</p>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h5><i class="bi bi-person-plus"></i> Patient Information</h5>
+            </div>
+            <div class="panel-body">
+              <form method="POST" action="{% url 'patient_register' %}">
+                {% csrf_token %}
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label">Full Name *</label>
+                    <input type="text" class="form-control" name="full_name" required />
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">Age *</label>
+                    <input type="number" class="form-control" name="age" required />
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">Gender *</label>
+                    <select class="form-select" name="gender" required>
+                      <option value="">Select</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Email *</label>
+                    <input type="email" class="form-control" name="email" required />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Phone *</label>
+                    <input type="text" class="form-control" name="phone" required />
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">Address</label>
+                    <textarea class="form-control" name="address" rows="3"></textarea>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">Current Condition</label>
+                    <textarea class="form-control" name="disease" rows="2"></textarea>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label">Doctor Assigned</label>
+                    <input type="text" class="form-control" name="doctor_assigned"
+                      placeholder="Enter doctor's name manually" />
+                    <div class="form-text mt-1" style="color:#8896a5;">You can type any doctor's name here, it doesn't
+                      have to be from the registered doctors list</div>
+                  </div>
+                  <div class="col-12">
+                    <button type="submit" class="topbar-btn btn-primary-filled"
+                      style="width:100%;justify-content:center;padding:0.75rem;">
+                      <i class="bi bi-person-check"></i> Register Patient
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- =================== REGISTER DOCTOR =================== -->
+        <div id="register-doctor" class="content-section">
+          <div class="topbar">
+            <div class="topbar-title">
+              <h2>Register New Doctor</h2>
+              <p>Fill in the details to add a new doctor record</p>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h5><i class="bi bi-person-badge"></i> Doctor Information</h5>
+            </div>
+            <div class="panel-body">
+              <form method="POST" action="{% url 'doctor_register' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label">Full Name *</label>
+                    <input type="text" class="form-control" name="full_name" required />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Specialization *</label>
+                    <input type="text" class="form-control" name="specialization" required />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Email *</label>
+                    <input type="email" class="form-control" name="email" required />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Phone *</label>
+                    <input type="text" class="form-control" name="phone" required />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Experience (Years) *</label>
+                    <input type="number" class="form-control" name="experience" required />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Photo</label>
+                    <input type="file" class="form-control" name="photo" accept="image/*" />
+                  </div>
+                  <div class="col-12">
+                    <button type="submit" class="topbar-btn btn-primary-filled"
+                      style="width:100%;justify-content:center;padding:0.75rem;">
+                      <i class="bi bi-person-check"></i> Register Doctor
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- =================== ALL PATIENTS =================== -->
+        <div id="patients" class="content-section">
+          <div class="topbar">
+            <div class="topbar-title">
+              <h2>All Patients</h2>
+              <p>Manage and view all registered patient records</p>
+            </div>
+            <div class="topbar-actions">
+              <button class="topbar-btn btn-primary-filled" onclick="showSection('register-patient', null)">
+                <i class="bi bi-person-plus"></i> Add New Patient
+              </button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h5><i class="bi bi-people"></i> Patient Records</h5>
+              <div class="search-wrap">
+                <i class="bi bi-search"></i>
+                <input type="text" class="form-control" placeholder="Search patients..." id="patientSearch"
+                  style="padding-left:2.2rem;min-width:200px;" />
+              </div>
+            </div>
+            {% if all_patients %}
+            <div style="overflow-x:auto;">
+              <table class="data-table" id="patientTable">
+
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Age</th>
+                    <th>Gender</th>
+                    <th>Condition</th>
+                    <th>Doctor</th>
+                    <th style="text-align:center;">QR / TX</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {% for patient in all_patients %}
+                  <tr>
+
+                    <td class="text-muted" style="font-size:0.8rem;">
+                      {{ forloop.counter }}
+                    </td>
+
+                    <!-- NAME -->
+                    <td>
+                      <div style="display:flex;align-items:center;gap:10px;">
+                        <img
+                          src="https://ui-avatars.com/api/?name={{ patient.full_name|urlencode }}&background=0cb76b&color=fff"
+                          class="user-avatar" />
+                        <div>
+                          <div style="font-weight:600;">{{ patient.full_name }}</div>
+                        </div>
+                      </div>
+                    </td>
+
+                    <!-- EMAIL -->
+                    <td style="font-size:0.82rem;">{{ patient.email }}</td>
+
+                    <td>{{ patient.age }}</td>
+                    <td>{{ patient.gender }}</td>
+
+                    <!-- CONDITION -->
+                    <td>
+                      <span class="badge-pill badge-info">
+                        {{ patient.disease|default:"Not specified" }}
+                      </span>
+                    </td>
+
+                    <!-- DOCTOR -->
+                    <td style="font-weight:500;">
+                      {{ patient.doctor_assigned|default:"Not assigned" }}
+                    </td>
+
+                    <!-- QR SECTION -->
+                    <td style="text-align:center;">
+
+                      {% if patient.qr_code %}
+                      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+
+                        <!-- SMALL QR -->
+                        <img src="{{ patient.qr_code.url }}"
+                          style="width:48px;height:48px;border-radius:6px;border:1px solid #edf2f7;" />
+
+                        <!-- HASH (VERY SMALL) -->
+                        <div style="font-size:0.6rem;color:#8896a5;line-height:1;">
+                          {{ patient.blockchain_hash|default:"-"|truncatechars:10 }}
+                        </div>
+
+                        <!-- TX -->
+                        <div style="font-size:0.6rem;color:#8896a5;line-height:1;">
+                          {{ patient.tx_hash|default:"-"|truncatechars:10 }}
+                        </div>
+
+                        <!-- SMALL BUTTON -->
+                        {% if patient.tx_hash %}
+                        <button class="copy-btn" style="font-size:0.6rem;padding:2px 6px;margin-top:2px;"
+                          onclick="copyTx('{{ patient.tx_hash }}')">
+                          Copy
+                        </button>
+                        {% endif %}
+
+                      </div>
+
+                      {% else %}
+                      <span style="font-size:0.75rem;color:#8896a5;">No QR</span>
+                      {% endif %}
+
+                    </td>
+                    <!-- ACTIONS -->
+                    <td>
+                      <div style="display:flex;gap:5px;">
+                        <a href="{% url 'edit_patient' patient.id %}" class="topbar-btn"
+                          style="padding:4px 6px;font-size:0.75rem;">
+                          <i class="bi bi-pencil"></i>
+                        </a>
+
+                        <a href="{% url 'delete_patient' patient.id %}" class="topbar-btn"
+                          style="padding:4px 6px;font-size:0.75rem;" onclick="return confirm('Delete this patient?')">
+                          <i class="bi bi-trash"></i>
+                        </a>
+
+                        <a href="{% url 'patient_history' patient.id %}?from=admin" class="topbar-btn"
+                          style="padding:5px;">
+                          <i class="bi bi-clock-history"></i>
+                        </a>
+                      </div>
+                    </td>
+
+                  </tr>
+                  {% endfor %}
+                </tbody>
+
+              </table>
+            </div>
+            {% else %}
+            <div class="empty-state"><i class="bi bi-people"></i>
+              <p>No patients found. Add your first patient to get started.</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- =================== ALL DOCTORS =================== -->
+        <div id="doctors" class="content-section">
+          <div class="topbar">
+            <div class="topbar-title">
+              <h2>All Doctors</h2>
+              <p>Manage and view all registered doctor profiles</p>
+            </div>
+            <div class="topbar-actions">
+              <button class="topbar-btn btn-primary-filled" onclick="showSection('register-doctor', null)">
+                <i class="bi bi-person-badge"></i> Add New Doctor
+              </button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h5><i class="bi bi-person-badge"></i> Doctor Records</h5>
+              <div class="search-wrap">
+                <i class="bi bi-search"></i>
+                <input type="text" class="form-control" placeholder="Search doctors..." id="doctorSearch"
+                  style="padding-left:2.2rem;min-width:200px;" />
+              </div>
+            </div>
+            {% if all_doctors %}
+            <div style="overflow-x:auto;">
+              <table class="data-table" id="doctorTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Specialization</th>
+                    <th>Experience</th>
+                    <th>Phone</th>
+                    <th>Photo</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for doctor in all_doctors %}
+                  <tr>
+                    <td style="color:#8896a5;font-size:0.8rem;">{{ forloop.counter }}</td>
+                    <td>
+                      <div style="display:flex;align-items:center;gap:10px;">
+                        {% if doctor.photo %}
+                        <img src="{{ doctor.photo.url }}" class="user-avatar" />
+                        {% else %}
+                        <img
+                          src="https://ui-avatars.com/api/?name={{ doctor.full_name|urlencode }}&background=0cb76b&color=fff"
+                          class="user-avatar" />
+                        {% endif %}
+                        <span style="font-weight:600;color:#1a2332;">{{ doctor.full_name }}</span>
+                      </div>
+                    </td>
+                    <td>{{ doctor.email }}</td>
+                    <td>{{ doctor.specialization }}</td>
+                    <td>{{ doctor.experience }} years</td>
+                    <td>{{ doctor.phone }}</td>
+                    <td>
+                      {% if doctor.photo %}
+                      <img src="{{ doctor.photo.url }}" class="user-avatar" />
+                      {% else %}
+                      <span style="color:#cbd5e0;font-size:0.82rem;">No photo</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <div style="display:flex;gap:3px;">
+                        <a href="{% url 'edit_doctor' doctor.id %}" class="action-btn edit" title="Edit"><i
+                            class="bi bi-pencil"></i></a>
+                        <a href="{% url 'delete_doctor' doctor.id %}" class="action-btn delete" title="Delete"
+                          onclick="return confirm('Are you sure you want to delete this doctor?')"><i
+                            class="bi bi-trash"></i></a>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <div class="empty-state"><i class="bi bi-person-badge"></i>
+              <p>No doctors found. Register your first doctor to get started.</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- =================== APPOINTMENTS =================== -->
+        <div id="appointments" class="content-section">
+
+          <!-- TOPBAR -->
+          <div class="topbar">
+            <div class="topbar-title">
+              <h2>Doctor Requests Status</h2>
+              <p>View patient requests and doctor response status</p>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h5><i class="bi bi-activity"></i> Request Records</h5>
+
+            </div>
+
+            {% if all_requests %}
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Status</th>
+                    <th>Requested On</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {% for req in all_requests %}
+                  <tr>
+                    <td style="color:#8896a5;font-size:0.8rem;">
+                      {{ forloop.counter }}
+                    </td>
+
+                    <td style="font-weight:600;color:#1a2332;">
+                      {{ req.patient.full_name }}
+                    </td>
+
+                    <td>
+                      {{ req.doctor.full_name }}
+                    </td>
+
+                    <!-- STATUS -->
+                    <td>
+                      {% if req.status == 'Pending' %}
+                      <span class="badge-pill badge-warning">Pending</span>
+
+                      {% elif req.status == 'Accepted' %}
+                      <span class="badge-pill badge-success">Accepted</span>
+
+                      {% else %}
+                      <span class="badge-pill badge-danger">Rejected</span>
+                      {% endif %}
+                    </td>
+
+                    <td style="color:#8896a5;">
+                      {{ req.created_at|date:"d M Y, h:i A" }}
+                    </td>
+
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            {% else %}
+            <div class="empty-state">
+              <i class="bi bi-inbox"></i>
+              <p>No requests found.</p>
+            </div>
+            {% endif %}
+          </div>
+
+        </div>
+
+        <!-- =================== REPORTS =================== -->
+        <div id="reports" class="content-section">
+
+          <!-- TOPBAR -->
+          <div class="topbar">
+            <div class="topbar-title">
+              <h2>Reports & Statistics</h2>
+              <p>Overview of system performance and analytics</p>
+            </div>
+          </div>
+
+          <!-- ================= STAT CARDS ================= -->
+          <div class="stats-grid" style="grid-template-columns:repeat(5,1fr);">
+
+            <div class="stat-card" style="--accent:#0cb76b;">
+              <div class="stat-icon" style="--icon-bg:#e6f9f1;--icon-color:#0cb76b;">
+                <i class="bi bi-people"></i>
+              </div>
+              <div class="stat-label">Patients</div>
+              <div class="stat-value">{{ total_patients }}</div>
+            </div>
+
+            <div class="stat-card" style="--accent:#2b5ce6;">
+              <div class="stat-icon" style="--icon-bg:#e8f0fe;--icon-color:#2b5ce6;">
+                <i class="bi bi-person-badge"></i>
+              </div>
+              <div class="stat-label">Doctors</div>
+              <div class="stat-value">{{ total_doctors }}</div>
+            </div>
+
+            <div class="stat-card" style="--accent:#7c3aed;">
+              <div class="stat-icon" style="--icon-bg:#f3e8ff;--icon-color:#7c3aed;">
+                <i class="bi bi-send"></i>
+              </div>
+              <div class="stat-label">Total Requests</div>
+              <div class="stat-value">{{ total_requests }}</div>
+            </div>
+
+            <div class="stat-card" style="--accent:#0ea5e9;">
+              <div class="stat-icon" style="--icon-bg:#e0f2fe;--icon-color:#0ea5e9;">
+                <i class="bi bi-check-circle"></i>
+              </div>
+              <div class="stat-label">Accepted</div>
+              <div class="stat-value">{{ accepted_requests }}</div>
+            </div>
+
+            <div class="stat-card" style="--accent:#f59e0b;">
+              <div class="stat-icon" style="--icon-bg:#fff7ed;--icon-color:#f59e0b;">
+                <i class="bi bi-hourglass-split"></i>
+              </div>
+              <div class="stat-label">Pending</div>
+              <div class="stat-value">{{ pending_requests }}</div>
+            </div>
+
+          </div>
+
+          <!-- ================= CHART ================= -->
+          <div class="panel mt-4">
+            <div class="panel-header">
+              <h5><i class="bi bi-pie-chart"></i> Request Status Overview</h5>
+            </div>
+
+            <div style="max-width:400px;margin:auto;">
+              <canvas id="requestChart"></canvas>
+            </div>
+          </div>
+
+          <!-- ================= TOP DOCTORS ================= -->
+          <div class="panel mt-4">
+            <div class="panel-header">
+              <h5><i class="bi bi-person-lines-fill"></i> Top Doctors</h5>
+            </div>
+
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Doctor</th>
+                  <th>Total Requests</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {% for doc in top_doctors %}
+                <tr>
+                  <td>{{ doc.doctor__full_name }}</td>
+                  <td>{{ doc.total }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- ================= RECENT ACTIVITY ================= -->
+          <div class="panel mt-4">
+
+            <div class="panel-header">
+              <h5><i class="bi bi-clock-history"></i> Recent Activity</h5>
+            </div>
+
+            {% if recent_requests %}
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {% for req in recent_requests %}
+                  <tr>
+
+                    <td style="color:#8896a5;font-size:0.8rem;">
+                      {{ forloop.counter }}
+                    </td>
+
+                    <td style="font-weight:600;color:#1a2332;">
+                      {{ req.patient.full_name }}
+                    </td>
+
+                    <td>
+                      Dr. {{ req.doctor.full_name }}
+                    </td>
+
+                    <!-- STATUS BADGE -->
+                    <td>
+                      {% if req.status == 'Accepted' %}
+                      <span class="badge-pill badge-success">Accepted</span>
+                      {% else %}
+                      <span class="badge-pill badge-warning">Pending</span>
+                      {% endif %}
+                    </td>
+
+                    <td style="color:#8896a5;">
+                      {{ req.created_at|date:"d M Y, h:i A" }}
+                    </td>
+
+                  </tr>
+                  {% endfor %}
+                </tbody>
+
+              </table>
+            </div>
+
+            {% else %}
+            <div class="empty-state">
+              <i class="bi bi-clock"></i>
+              <p>No recent activity found.</p>
+            </div>
+            {% endif %}
+
+          </div>
+        </div>
+
+      </div><!-- end main-inner -->
+    </div><!-- end main-content -->
+  </div><!-- end layout -->
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Shared JS -->
+  <script src="{% static 'assets/js/medicare_common.js' %}"></script>
+  <!-- Admin-specific JS -->
+  <script>
+    function copyTx(txHash) {
+      if (!txHash) {
+        alert("No TX available");
+        return;
+      }
+
+      navigator.clipboard.writeText(txHash);
+      alert("Transaction hash copied!");
+    }
+    const ctx = document.getElementById('requestChart');
+
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Accepted', 'Pending'],
+        datasets: [{
+          data: [{{ accepted_requests }}, {{ pending_requests }}],
+      backgroundColor: ['#0cb76b', '#f59e0b']
+    }]
+  },
+      options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+});
+    document.getElementById("patientSearch").addEventListener("keyup", function () {
+      let input = this.value.toLowerCase();
+      let rows = document.querySelectorAll("#patientTable tbody tr");
+
+      rows.forEach(function (row) {
+        let text = row.innerText.toLowerCase();
+        row.style.display = text.includes(input) ? "" : "none";
+      });
+    });
+
+    document.getElementById("doctorSearch").addEventListener("keyup", function () {
+      let input = this.value.toLowerCase();
+      let rows = document.querySelectorAll("#doctorTable tbody tr");
+
+      rows.forEach(function (row) {
+        let text = row.innerText.toLowerCase();
+        row.style.display = text.includes(input) ? "" : "none";
+      });
+    });
+  </script>
+
+
+  {% if messages %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      {% for message in messages %}
+      Swal.fire({
+        title: "{{ message|escapejs }}",
+        icon: "{{ message.tags }}",
+        confirmButtonText: "OK"
+      });
+      {% endfor %}
+    });
+  </script>
+  {% endif %}
+</body>
+
+</html>

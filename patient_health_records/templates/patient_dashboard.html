@@ -1,0 +1,758 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MediCare - Patient Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+    <link rel="stylesheet" href="{% static 'assets/css/medicare_common.css' %}">
+    <style>
+      /* ===== PATIENT-SPECIFIC: Visit timeline items ===== */
+      .visit-item { display:flex;align-items:flex-start;gap:1rem;padding:1.1rem 0;border-bottom:1px solid #f0f4f8; }
+      .visit-item:last-child { border-bottom:none;padding-bottom:0; }
+      .visit-dot { width:10px;height:10px;border-radius:50%;background:var(--primary);margin-top:5px;flex-shrink:0;box-shadow:0 0 0 3px #e6f9f1; }
+      .visit-meta { flex:1;min-width:0; }
+      .visit-meta .visit-date { font-size:0.78rem;color:#8896a5;margin-bottom:2px; }
+      .visit-meta .visit-title { font-size:0.9rem;font-weight:600;color:#1a2332; }
+      .visit-meta .visit-sub { font-size:0.82rem;color:#6b7a8d;margin-top:2px; }
+
+      /* ===== PATIENT-SPECIFIC: Blockchain status bar ===== */
+      .blockchain-status { display:flex;align-items:center;gap:12px;padding:1rem 1.25rem;background:#e6f9f1;border-radius:12px;border:1.5px solid #b2dfcc;margin-bottom:1.5rem; }
+      .blockchain-status .status-icon { width:40px;height:40px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0; }
+      .blockchain-status p { margin:0;font-size:0.9rem;font-weight:600;color:#0a6640; }
+      .blockchain-status span { font-size:0.8rem;color:#3a7a58; }
+
+      /* ===== PATIENT-SPECIFIC: Feature checklist ===== */
+      .feature-list { list-style:none;padding:0;margin:0; }
+      .feature-list li { display:flex;align-items:center;gap:10px;padding:0.55rem 0;font-size:0.88rem;color:#2d3748;border-bottom:1px solid #f0f4f8; }
+      .feature-list li:last-child { border-bottom:none; }
+      .feature-list li i { color:var(--primary);font-size:0.9rem;flex-shrink:0; }
+
+      /* ===== PATIENT-SPECIFIC: QR display block ===== */
+      .qr-block { background:#f7fff9;border:2px dashed #b2dfcc;border-radius:14px;padding:1.5rem;text-align:center; }
+      .qr-block img { max-width:160px;border-radius:10px;border:3px solid white;box-shadow:0 4px 16px rgba(0,0,0,0.1);transition:var(--transition); }
+      .qr-block img:hover { transform:scale(1.04); }
+
+      /* ===== PATIENT-SPECIFIC: Doctor cards ===== */
+      .doctor-card { background:white;border-radius:14px;padding:1.25rem;border:1.5px solid #edf2f7;transition:var(--transition);display:flex;flex-direction:column;gap:0.75rem;height:100%; }
+      .doctor-card:hover { border-color:var(--primary);box-shadow:var(--hover-shadow);transform:translateY(-2px); }
+      .doctor-card .doctor-avatar { width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#e6f9f1,#b2dfcc);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--primary);font-weight:700; }
+      .doctor-card h6 { font-size:0.95rem;font-weight:700;color:#1a2332;margin:0; }
+      .doctor-card small { color:#8896a5;font-size:0.8rem; }
+
+      /* ===== PATIENT-SPECIFIC: Visit detail rows ===== */
+      .visit-info-row { display:flex;gap:6px;align-items:flex-start;margin-bottom:0.6rem; }
+      .visit-info-row .vi-label { font-size:0.72rem;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;color:#8896a5;min-width:95px;padding-top:1px; }
+      .visit-info-row .vi-value { font-size:0.9rem;font-weight:500;color:#1a2332; }
+
+      /* ===== APPOINTMENTS: new additions ===== */
+      .doctor-card-accepted { border:2px solid var(--primary) !important;background:#e6f9f1; }
+      .meta-pill { background:#f7fafc;border:1px solid #edf2f7;border-radius:20px;padding:3px 10px;font-size:.72rem;color:#6b7a8d;display:inline-flex;align-items:center;gap:4px; }
+      .meta-pill.online { background:#e6f9f1;color:#0a6640;border-color:#b2dfcc; }
+      .status-badge { display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:.75rem;font-weight:600; }
+      .badge-pending  { background:#fff8e6;color:#92600a;border:1px solid #f0d080; }
+      .badge-accepted { background:#e6f9f1;color:#0a6640;border:1px solid #b2dfcc; }
+      .badge-rejected { background:#fdeaea;color:#991b1b;border:1px solid #f5b8b8; }
+      .filter-tab { padding:.38rem .85rem;border-radius:20px;border:1.5px solid #edf2f7;font-size:.8rem;cursor:pointer;color:#6b7a8d;background:white; }
+      .filter-tab.active { background:var(--primary);color:#fff;border-color:var(--primary); }
+    </style>
+  </head>
+  <body>
+
+    <div class="layout">
+
+      <!-- ===== SIDEBAR ===== -->
+      <aside class="sidebar" id="sidebarMenu">
+        <div class="sidebar-brand">
+          <div class="brand-icon"><i class="bi bi-heart-pulse-fill"></i></div>
+          <h5>MediCare</h5>
+          <p>Patient Portal</p>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-section-label">Main</div>
+          <button class="sidebar-link active" onclick="showSection('dashboard', this)"><i class="bi bi-speedometer2"></i> Dashboard</button>
+          <button class="sidebar-link" onclick="showSection('profile', this)"><i class="bi bi-person-circle"></i> My Profile</button>
+          <button class="sidebar-link" onclick="showSection('blockchain', this)"><i class="bi bi-shield-lock"></i> Blockchain Records</button>
+          <button class="sidebar-link" onclick="showSection('history', this)"><i class="bi bi-clock-history"></i> Medical History</button>
+          <button class="sidebar-link" onclick="showSection('appointments', this)"><i class="bi bi-calendar-check"></i> Appointments</button>
+          <button class="sidebar-link" onclick="showSection('records', this)"><i class="bi bi-journal-medical"></i> All Records</button>
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="sidebar-user">
+            <div class="avatar">{{ patient.full_name|slice:":1"|upper }}</div>
+            <div class="user-info">
+              <div class="user-name">{{ patient.full_name }}</div>
+              <div class="user-role">Patient</div>
+            </div>
+          </div>
+          <a class="sidebar-link mt-2" href="{% url 'log_out' %}" style="color:rgba(255,255,255,0.7);"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
+        </div>
+      </aside>
+
+      <!-- ===== MAIN CONTENT ===== -->
+      <div class="main-content" id="mainContent">
+        <div class="main-inner">
+
+          <button class="mobile-toggle" onclick="toggleSidebar()"><i class="bi bi-list"></i> Menu</button>
+
+          <!-- =================== DASHBOARD =================== -->
+          <div id="dashboard" class="content-section active">
+            <div class="topbar">
+              <div class="topbar-title">
+                <h2>Dashboard</h2>
+                <p>Welcome back, {{ patient.full_name }} &mdash; here's your health overview</p>
+              </div>
+              <div class="topbar-actions">
+                <button class="topbar-btn" onclick="showSection('history', document.querySelector('[onclick*=history]'))"><i class="bi bi-clock-history"></i> View History</button>
+                <button class="topbar-btn btn-primary-filled" onclick="showSection('appointments', document.querySelector('[onclick*=appointments]'))"><i class="bi bi-calendar-plus"></i> Book Appointment</button>
+              </div>
+            </div>
+
+            <div class="stats-grid">
+              <div class="stat-card" style="--accent:#0cb76b;">
+                <div class="stat-icon" style="--icon-bg:#e6f9f1;--icon-color:#0cb76b;"><i class="bi bi-file-earmark-medical"></i></div>
+                <div class="stat-label">Medical Records</div>
+                <div class="stat-value">{{ history_records|length }}</div>
+                <div class="stat-sub">Total history entries</div>
+                <span class="badge-pill badge-success stat-badge">Active</span>
+              </div>
+              <div class="stat-card" style="--accent:#2b5ce6;">
+                <div class="stat-icon" style="--icon-bg:#e8f0fe;--icon-color:#2b5ce6;"><i class="bi bi-calendar-check"></i></div>
+                <div class="stat-label">Appointments</div>
+                <div class="stat-value">0</div>
+                <div class="stat-sub">Scheduled visits</div>
+                <span class="badge-pill badge-info stat-badge">Upcoming</span>
+              </div>
+              <div class="stat-card" style="--accent:{% if patient.blockchain_hash %}#0cb76b{% else %}#e8a500{% endif %};">
+                <div class="stat-icon" style="--icon-bg:{% if patient.blockchain_hash %}#e6f9f1{% else %}#fff8e6{% endif %};--icon-color:{% if patient.blockchain_hash %}#0cb76b{% else %}#e8a500{% endif %};"><i class="bi bi-shield-check"></i></div>
+                <div class="stat-label">Blockchain</div>
+                <div class="stat-value" style="font-size:1.4rem;">{% if patient.blockchain_hash %}Secured{% else %}Pending{% endif %}</div>
+                <div class="stat-sub">Encrypted record status</div>
+                <span class="badge-pill {% if patient.blockchain_hash %}badge-success{% else %}badge-warning{% endif %} stat-badge">{% if patient.blockchain_hash %}Verified{% else %}Awaiting{% endif %}</span>
+              </div>
+            </div>
+
+            <div class="row g-4">
+              <div class="col-12 col-lg-5">
+                <div class="panel mb-4">
+                  <div class="panel-header">
+                    <h5><i class="bi bi-activity"></i> Recent Medical Updates</h5>
+                    <button class="copy-btn" style="font-size:0.75rem;" onclick="showSection('history', document.querySelector('[onclick*=history]'))">See all <i class="bi bi-arrow-right"></i></button>
+                  </div>
+                  <div class="panel-body" style="padding-top:0.5rem;padding-bottom:0.5rem;">
+                    {% if history_records %}
+                      {% for record in history_records|slice:":4" %}
+                      <div class="visit-item">
+                        <div class="visit-dot"></div>
+                        <div class="visit-meta">
+                          <div class="visit-date">{{ record.updated_at|date:"M d, Y · H:i" }}</div>
+                          <div class="visit-title">{{ record.disease|default:"General Checkup" }}</div>
+                          <div class="visit-sub">Dr. {{ record.doctor_assigned|default:"Not assigned" }}</div>
+                        </div>
+                        <span class="badge-pill badge-info">Update</span>
+                      </div>
+                      {% endfor %}
+                    {% else %}
+                      <div class="empty-state"><i class="bi bi-activity"></i><p>No recent medical updates</p></div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <div class="panel">
+                  <div class="panel-header"><h5><i class="bi bi-person-lines-fill"></i> Recent Visits</h5></div>
+                  <div class="panel-body" style="padding-top:0.5rem;padding-bottom:0.5rem;">
+                    {% if visits %}
+                      {% for v in visits|slice:":3" %}
+                      <div class="visit-item" style="flex-wrap:wrap;gap:0.75rem;">
+                        <div style="display:flex;align-items:flex-start;gap:0.75rem;flex:1;min-width:0;">
+                          <div class="visit-dot" style="margin-top:6px;"></div>
+                          <div class="visit-meta">
+                            <div class="visit-date">{{ v.visit_date|date:"M d, Y" }}</div>
+                            <div class="visit-title">Dr. {{ v.doctor.full_name }}</div>
+                            <div class="visit-sub">{{ v.diagnosis|default:"No diagnosis recorded" }}</div>
+                          </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:0.75rem;flex-shrink:0;">
+                          {% if v.qr_code %}<img src="{{ v.qr_code.url }}" width="52" height="52" style="border-radius:8px;border:2px solid #edf2f7;" alt="Visit QR" />{% endif %}
+                          <div>
+                            {% if v.blockchain_hash %}<div style="font-family:monospace;font-size:0.7rem;color:#8896a5;background:#f7fafc;padding:2px 6px;border-radius:5px;margin-bottom:4px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ v.blockchain_hash|truncatechars:18 }}</div>{% endif %}
+                            <a href="{% url 'patient_info' v.patient.id %}" class="copy-btn" style="font-size:0.72rem;">View <i class="bi bi-arrow-right"></i></a>
+                          </div>
+                        </div>
+                      </div>
+                      {% endfor %}
+                    {% else %}
+                      <div class="empty-state"><i class="bi bi-person-lines-fill"></i><p>No visits recorded yet</p></div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-12 col-lg-7">
+  <div class="panel">
+    <div class="panel-header">
+      <h5><i class="bi bi-clipboard2-pulse"></i> Latest Doctor Update</h5>
+      {% if latest_visit %}<span class="badge-pill badge-success"><i class="bi bi-check-circle-fill" style="font-size:0.65rem;"></i> Recorded</span>{% endif %}
+    </div>
+    <div class="panel-body">
+      {% if latest_visit %}
+      <div class="row g-3 align-items-start">
+        <div class="col-12 col-sm-4">
+          <div class="qr-block" style="padding:1rem;">
+            {% if latest_visit.qr_code %}
+              <img src="{{ latest_visit.qr_code.url }}" alt="Visit QR Code" class="mb-2" style="max-width:110px;" />
+              <p style="font-size:0.72rem;color:#5a7a6a;margin:0.3rem 0 0.5rem;font-weight:600;">Scan to verify</p>
+              <a href="{{ latest_visit.qr_code.url }}" download class="copy-btn" style="font-size:0.72rem;"><i class="bi bi-download"></i> Download</a>
+            {% else %}
+              <i class="bi bi-qr-code" style="font-size:2rem;color:#b2dfcc;display:block;margin-bottom:0.4rem;"></i>
+              <p style="font-size:0.78rem;color:#8896a5;margin:0;">No QR available</p>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-12 col-sm-8">
+          <div class="visit-info-row"><span class="vi-label">Doctor</span><span class="vi-value">Dr. {{ latest_visit.doctor.full_name }}</span></div>
+          <div class="visit-info-row"><span class="vi-label">Visit Date</span><span class="vi-value">{{ latest_visit.visit_date|date:"F d, Y" }}</span></div>
+          <div class="visit-info-row"><span class="vi-label">Diagnosis</span><span class="vi-value">{{ latest_visit.diagnosis|default:"N/A" }}</span></div>
+          <div class="visit-info-row"><span class="vi-label">Prescription</span><span class="vi-value">{{ latest_visit.prescription|default:"N/A" }}</span></div>
+          {% if latest_visit.notes %}<div class="visit-info-row"><span class="vi-label">Notes</span><span class="vi-value">{{ latest_visit.notes }}</span></div>{% endif %}
+          <div style="margin-top:0.75rem;">
+            <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#8896a5;margin-bottom:0.4rem;">Blockchain Hash</div>
+            <div class="hash-box mb-2">{{ latest_visit.blockchain_hash|default:"Not recorded yet" }}</div>
+            {% if latest_visit.blockchain_hash %}<button class="copy-btn" onclick="copyToClipboard('{{ latest_visit.blockchain_hash }}', this)"><i class="bi bi-clipboard"></i> Copy Hash</button>{% endif %}
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:1.25rem 1rem;">
+        <i class="bi bi-clipboard2-x" style="color:#cbd5e0;"></i>
+        <p style="margin:0.5rem 0 0;">No doctor updates yet.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+            </div>
+          </div>
+
+          <!-- =================== PROFILE =================== -->
+          <div id="profile" class="content-section">
+            <div class="topbar">
+              <div class="topbar-title"><h2>My Profile</h2><p>View your personal and medical information</p></div>
+            </div>
+            <div class="row g-4">
+              <div class="col-12 col-lg-8">
+                <div class="panel">
+                  <div class="panel-header">
+                    <h5><i class="bi bi-person-badge"></i> Personal Information</h5>
+                    <span class="badge-pill badge-success"><i class="bi bi-check-circle-fill" style="font-size:0.65rem;"></i> Verified</span>
+                  </div>
+                  <div class="panel-body">
+                    <div class="row">
+                      <div class="col-sm-6"><div class="profile-field"><label>Full Name</label><p>{{ patient.full_name }}</p></div></div>
+                      <div class="col-sm-6"><div class="profile-field"><label>Email Address</label><p>{{ patient.email }}</p></div></div>
+                      <div class="col-sm-6"><div class="profile-field"><label>Phone Number</label><p>{{ patient.phone }}</p></div></div>
+                      <div class="col-sm-6"><div class="profile-field"><label>Age</label><p>{{ patient.age }} years</p></div></div>
+                      <div class="col-sm-6"><div class="profile-field"><label>Gender</label><p>{{ patient.gender }}</p></div></div>
+                      <div class="col-sm-6"><div class="profile-field"><label>Current Condition</label><p>{{ patient.disease|default:"Not specified" }}</p></div></div>
+                      <div class="col-12"><div class="profile-field"><label>Assigned Doctor</label><p>{{ patient.doctor_assigned|default:"Not yet assigned" }}</p></div></div>
+                      <div class="col-12"><div class="profile-field"><label>Address</label><p>{{ patient.address|default:"Not provided" }}</p></div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-lg-4">
+                <div class="panel">
+                  <div class="panel-header"><h5><i class="bi bi-qr-code-scan"></i> QR Code</h5></div>
+                  <div class="panel-body">
+                    {% if patient.qr_code %}
+                    <div class="qr-block">
+                      <img src="{{ patient.qr_code.url }}" alt="Patient QR Code" style="max-width:170px;" />
+                      <p style="font-size:0.8rem;color:#5a7a6a;font-weight:600;margin:0.75rem 0 1rem;">Scan to view blockchain records</p>
+                      <a href="{{ patient.qr_code.url }}" download class="copy-btn"><i class="bi bi-download"></i> Download QR</a>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                      <i class="bi bi-qr-code" style="font-size:3rem;"></i>
+                      <p>QR code will be generated after your first medical update</p>
+                    </div>
+                    {% endif %}
+                  </div>
+                </div>
+                {% if patient.blockchain_hash %}
+                <div class="panel mt-4">
+                  <div class="panel-header"><h5><i class="bi bi-shield-check"></i> Security Status</h5></div>
+                  <div class="panel-body">
+                    <div class="blockchain-status" style="margin-bottom:0;">
+                      <div class="status-icon"><i class="bi bi-check-lg"></i></div>
+                      <div><p>Blockchain Secured</p><span>Your records are protected</span></div>
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- =================== BLOCKCHAIN =================== -->
+          <div id="blockchain" class="content-section">
+  <div class="topbar">
+    <div class="topbar-title"><h2>Blockchain Records</h2><p>Your secure, immutable health data on the blockchain</p></div>
+  </div>
+  <div class="row g-4">
+    <div class="col-12 col-lg-7">
+      <div class="panel">
+        <div class="panel-header">
+          <h5><i class="bi bi-shield-lock-fill"></i> Security Information</h5>
+          <span class="badge-pill {% if patient.blockchain_hash %}badge-success{% else %}badge-warning{% endif %}">{% if patient.blockchain_hash %}Active{% else %}Pending{% endif %}</span>
+        </div>
+        <div class="panel-body">
+          {% if patient.blockchain_hash %}
+          <div class="blockchain-status">
+            <div class="status-icon"><i class="bi bi-shield-check"></i></div>
+            <div><p>Records Secured on Blockchain</p><span>Your medical data is encrypted and immutable</span></div>
+          </div>
+
+          <div class="mb-4">
+            <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#8896a5;margin-bottom:0.5rem;">Blockchain Hash</div>
+            <div class="hash-box">{{ patient.blockchain_hash }}</div>
+            <button class="copy-btn mt-2" onclick="copyToClipboard('{{ patient.blockchain_hash }}', this)"><i class="bi bi-clipboard"></i> Copy Hash</button>
+          </div>
+
+          <div>
+            <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#8896a5;margin-bottom:0.5rem;">Public Record URL</div>
+            <div class="hash-box">http://127.0.0.1:8000/patient-record/{{ patient.id }}/</div>
+            <a href="http://127.0.0.1:8000/patient-record/{{ patient.id }}/" target="_blank" class="copy-btn mt-2" style="text-decoration:none;"><i class="bi bi-box-arrow-up-right"></i> Open Full Record</a>
+          </div>
+
+          {% else %}
+          <div class="empty-state">
+            <i class="bi bi-shield-exclamation" style="color:#e8a500;"></i>
+            <p><strong>No Blockchain Record Found</strong><br>Records will be secured after your first medical update.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-5">
+      <div class="panel">
+        <div class="panel-header"><h5><i class="bi bi-info-circle"></i> How It Protects You</h5></div>
+        <div class="panel-body">
+          <ul class="feature-list">
+            <li><i class="bi bi-check-circle-fill"></i> Immutable record keeping — data cannot be altered</li>
+            <li><i class="bi bi-check-circle-fill"></i> Transparent audit trail for every update</li>
+            <li><i class="bi bi-check-circle-fill"></i> Cryptographic data verification</li>
+            <li><i class="bi bi-check-circle-fill"></i> Prevents unauthorized changes</li>
+            <li><i class="bi bi-check-circle-fill"></i> Decentralized storage — no single point of failure</li>
+            <li><i class="bi bi-check-circle-fill"></i> Full patient data ownership</li>
+          </ul>
+        </div>
+      </div>
+
+      {% if patient.blockchain_hash %}
+      <div class="panel mt-4">
+        <div class="panel-header"><h5><i class="bi bi-qr-code-scan"></i> Quick Access</h5></div>
+        <div class="panel-body text-center">
+          {% if patient.qr_code %}
+          <div class="qr-block">
+            <img src="{{ patient.qr_code.url }}" alt="Patient QR" style="max-width:150px;" class="mb-2" />
+            <p style="font-size:0.75rem;color:#5a7a6a;font-weight:600;margin:0.4rem 0 0.75rem;">Doctor scans this to view your full record</p>
+            <a href="{{ patient.qr_code.url }}" download class="copy-btn" style="font-size:0.75rem;"><i class="bi bi-download"></i> Download QR</a>
+          </div>
+          {% else %}
+          <div class="empty-state"><i class="bi bi-qr-code" style="font-size:2.5rem;color:#b2dfcc;"></i><p style="font-size:0.8rem;">QR will appear after first doctor update</p></div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+          <!-- =================== HISTORY =================== -->
+          <div id="history" class="content-section">
+            <div class="topbar">
+              <div class="topbar-title"><h2>Medical History</h2><p>Complete record of your medical updates and treatments</p></div>
+              <div class="topbar-actions">
+                <span class="badge-pill badge-info" style="font-size:0.8rem;padding:6px 14px;">{{ history_records|length }} Records</span>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><h5><i class="bi bi-clock-history"></i> Complete History</h5></div>
+              {% if history_records %}
+              <div style="overflow-x:auto;">
+                <table class="data-table">
+                  <thead>
+                    <tr><th>#</th><th>Date &amp; Time</th><th>Condition</th><th>Doctor</th><th>Blockchain Hash</th><th>Status</th></tr>
+                  </thead>
+                  <tbody>
+                    {% for record in history_records %}
+                    <tr>
+                      <td style="color:#8896a5;font-size:0.8rem;">{{ forloop.counter }}</td>
+                      <td>
+                        <div style="font-weight:600;color:#1a2332;">{{ record.updated_at|date:"M d, Y" }}</div>
+                        <div style="font-size:0.78rem;color:#8896a5;">{{ record.updated_at|date:"H:i" }}</div>
+                      </td>
+                      <td><span style="font-weight:500;">{{ record.disease|default:"General Checkup" }}</span></td>
+                      <td>{{ record.doctor_assigned|default:"Not assigned" }}</td>
+                      <td>
+                        {% if record.blockchain_hash %}
+                        <span style="font-family:monospace;font-size:0.75rem;background:#f7fafc;padding:3px 7px;border-radius:5px;color:#4a5568;">{{ record.blockchain_hash|truncatechars:22 }}</span>
+                        {% else %}
+                        <span style="color:#cbd5e0;font-size:0.82rem;">&mdash;</span>
+                        {% endif %}
+                      </td>
+                      <td><span class="badge-pill badge-success">Recorded</span></td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              {% else %}
+              <div class="panel-body">
+                <div class="empty-state"><i class="bi bi-clock-history"></i><p>No medical history available yet</p></div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- =================== APPOINTMENTS =================== -->
+          <div id="appointments" class="content-section">
+  <div class="topbar">
+    <div class="topbar-title"><h2>Appointments</h2><p>Manage and schedule your doctor visits</p></div>
+    <div class="topbar-actions">
+      <a href="#request-doctor-panel" class="topbar-btn btn-primary-filled" style="text-decoration:none;"><i class="bi bi-plus-circle"></i> New Appointment</a>
+    </div>
+  </div>
+
+  <!-- ===== DOCTOR CARDS PANEL ===== -->
+  <div id="request-doctor-panel" class="panel mb-4">
+    <div class="panel-header">
+      <h5><i class="bi bi-people"></i> Available doctors</h5>
+    </div>
+    <div class="panel-body">
+
+      <!-- Search + Filter bar -->
+      <div style="display:flex;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center;">
+        <div style="flex:1;min-width:180px;display:flex;align-items:center;gap:8px;background:#f7f9fc;border:1.5px solid #edf2f7;border-radius:10px;padding:.45rem .85rem;">
+          <i class="bi bi-search" style="color:#8896a5;font-size:.85rem;"></i>
+          <input id="doctorSearch" type="text" placeholder="Search by name or specialization…"
+            style="border:none;background:transparent;outline:none;font-size:.85rem;color:#1a2332;width:100%;"
+            oninput="filterDoctors()" />
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="filter-tab active" onclick="setFilter('all',this)">All</button>
+          <button class="filter-tab" onclick="setFilter('Pending',this)">Pending</button>
+          <button class="filter-tab" onclick="setFilter('Accepted',this)">Accepted</button>
+        </div>
+      </div>
+
+      {% if doctors %}
+      <div class="row g-3" id="doctorGrid">
+        {% for doctor in doctors %}
+        <div class="col-12 col-sm-6 col-md-4 doctor-grid-item"
+          data-name="{{ doctor.full_name|lower }}"
+          data-spec="{{ doctor.specialization|lower }}"
+          data-status="{% for req in doctor_requests %}{% if req.doctor.id == doctor.id %}{{ req.status }}{% endif %}{% endfor %}">
+
+          <div class="doctor-card" style="height:100%;">
+
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="doctor-avatar">{{ doctor.full_name|slice:":1"|upper }}</div>
+              <div>
+                <h6>{{ doctor.full_name }}</h6>
+                <small>{{ doctor.specialization }}</small>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="meta-pill online">● Online</span>
+              {% if doctor.experience %}<span class="meta-pill">{{ doctor.experience }} yrs exp</span>{% endif %}
+            </div>
+
+            <div style="display:flex;align-items:center;gap:5px;font-size:.78rem;color:#8896a5;">
+              <span style="color:#f59e0b;letter-spacing:1px;font-size:11px;">★★★★★</span> 4.8
+            </div>
+
+            <div style="margin-top:auto;">
+              {% for req in doctor_requests %}
+                {% if req.doctor.id == doctor.id %}
+                  {% if req.status == "Pending" %}
+                    <span class="status-badge badge-pending mb-1" style="display:inline-flex;"><i class="bi bi-hourglass-split"></i> Pending</span>
+                  {% elif req.status == "Accepted" %}
+                    <span class="status-badge badge-accepted mb-1" style="display:inline-flex;"><i class="bi bi-check-circle-fill"></i> Accepted</span>
+                  {% elif req.status == "Rejected" %}
+                    <span class="status-badge badge-rejected mb-1" style="display:inline-flex;"><i class="bi bi-x-circle"></i> Rejected</span>
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+              <a href="{% url 'send_request_to_doctor' doctor.id %}" class="topbar-btn btn-primary-filled"
+                style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:.82rem;padding:.4rem .9rem;border-radius:9px;width:100%;margin-top:6px;">
+                <i class="bi bi-send"></i> Send request
+              </a>
+            </div>
+
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state"><i class="bi bi-person-x"></i><p>No doctors available at this time</p></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ===== MY REQUESTS TABLE ===== -->
+  <div class="panel mb-4">
+    <div class="panel-header"><h5><i class="bi bi-send-check"></i> My doctor requests</h5></div>
+    <div class="panel-body p-0">
+      {% if doctor_requests %}
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr><th>Doctor</th><th>Specialization</th><th>Sent on</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            {% for req in doctor_requests %}
+            <tr>
+              <td><strong>Dr. {{ req.doctor.full_name }}</strong></td>
+              <td><span style="color:#8896a5;font-size:.8rem;">{{ req.doctor.specialization }}</span></td>
+              <td><span style="font-size:.8rem;">{{ req.created_at|date:"d M Y" }}</span></td>
+              <td>
+                {% if req.status == "Pending" %}
+                  <span class="status-badge badge-pending"><i class="bi bi-hourglass-split"></i> Pending</span>
+                {% elif req.status == "Accepted" %}
+                  <span class="status-badge badge-accepted"><i class="bi bi-check-circle-fill"></i> Accepted</span>
+                {% elif req.status == "Rejected" %}
+                  <span class="status-badge badge-rejected"><i class="bi bi-x-circle"></i> Rejected</span>
+                {% else %}
+                  <span class="status-badge" style="background:#f0f4f8;color:#8896a5;">{{ req.status }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if req.status == "Rejected" %}
+                  <a href="{% url 'send_request_to_doctor' req.doctor.id %}"
+                    class="topbar-btn btn-primary-filled"
+                    style="font-size:.78rem;padding:.3rem .75rem;text-decoration:none;border-radius:7px;background:#ef4444;">
+                    <i class="bi bi-arrow-repeat"></i> Re-request
+                  </a>
+                {% elif req.status == "Pending" %}
+                  <a href="{% url 'cancel_request' req.id %}"
+                    style="font-size:.78rem;padding:.3rem .75rem;text-decoration:none;border-radius:7px;display:inline-flex;align-items:center;gap:5px;background:#f7fafc;border:1.5px solid #edf2f7;color:#6b7a8d;"
+                    onclick="return confirm('Cancel this request?')">
+                    <i class="bi bi-x-circle"></i> Cancel
+                  </a>
+                {% else %}
+                  <span style="font-size:.8rem;color:var(--primary);"><i class="bi bi-check2-all"></i> Done</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state py-4">
+        <i class="bi bi-send" style="font-size:2.5rem;color:#ccc;"></i>
+        <p class="mt-2">No requests sent yet.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ===== MY APPOINTMENTS ===== -->
+  <div class="panel">
+    <div class="panel-header"><h5><i class="bi bi-calendar2-week"></i> My appointments</h5></div>
+    <div class="panel-body p-0">
+      {% if appointments %}
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr><th>Doctor</th><th>Date</th><th>Time</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            {% for appt in appointments %}
+            <tr>
+              <td>
+                <strong>Dr. {{ appt.doctor.full_name }}</strong><br>
+                <span style="font-size:.78rem;color:#8896a5;">{{ appt.doctor.specialization }}</span>
+              </td>
+              <td>{{ appt.date }}</td>
+              <td>{{ appt.time }}</td>
+              <td>
+                {% if appt.status == 'Scheduled' %}
+                  <span class="status-badge badge-pending"><i class="bi bi-calendar-check"></i> Scheduled</span>
+                {% elif appt.status == 'Completed' %}
+                  <span class="status-badge badge-accepted"><i class="bi bi-check-circle-fill"></i> Completed</span>
+                {% else %}
+                  <span class="status-badge badge-rejected">{{ appt.status }}</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:2.5rem 1rem;">
+        <i class="bi bi-calendar-x" style="font-size:3rem;color:#ccc;"></i>
+        <p style="font-weight:600;color:#1a2332;margin:.75rem 0 .4rem;">No appointments yet</p>
+        <p style="font-size:.82rem;">Send a request to a doctor to get started.</p>
+        
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+          <!-- =================== ALL RECORDS =================== -->
+<div id="records" class="content-section">
+  <div class="topbar">
+    <div class="topbar-title"><h2>All Records</h2><p>Complete visit records stored in the system</p></div>
+    <div class="topbar-actions">
+      <span class="badge-pill badge-info" style="font-size:0.8rem;padding:6px 14px;">{{ all_visits|length }} Visits</span>
+    </div>
+  </div>
+
+  {% if all_visits %}
+    {% for v in all_visits %}
+    <div class="panel mb-4">
+      <div class="panel-header">
+        <h5><i class="bi bi-clipboard2-pulse"></i> Visit — {{ v.visit_date|date:"F d, Y" }}</h5>
+        <span class="badge-pill badge-success"><i class="bi bi-shield-check" style="font-size:0.65rem;"></i> Blockchain Secured</span>
+      </div>
+      <div class="panel-body">
+        <div class="row g-3 align-items-start">
+
+          <!-- LEFT: QR -->
+          <div class="col-12 col-sm-3 text-center">
+            <div class="qr-block">
+              {% if v.qr_code %}
+                <img src="{{ v.qr_code.url }}" alt="QR Code" style="max-width:130px;" class="mb-2" />
+                <p style="font-size:0.72rem;color:#5a7a6a;font-weight:600;margin:0.4rem 0 0.6rem;">Scan to verify</p>
+                <a href="{{ v.qr_code.url }}" download class="copy-btn" style="font-size:0.72rem;"><i class="bi bi-download"></i> Download</a>
+              {% else %}
+                <i class="bi bi-qr-code" style="font-size:2rem;color:#b2dfcc;display:block;margin-bottom:0.4rem;"></i>
+                <p style="font-size:0.78rem;color:#8896a5;margin:0;">No QR</p>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- RIGHT: Visit Info -->
+          <div class="col-12 col-sm-9">
+            <div class="row g-2">
+              <div class="col-sm-6">
+                <div class="visit-info-row"><span class="vi-label">Doctor</span><span class="vi-value">Dr. {{ v.doctor.full_name }}</span></div>
+                <div class="visit-info-row"><span class="vi-label">Visit Date</span><span class="vi-value">{{ v.visit_date|date:"F d, Y" }}</span></div>
+                <div class="visit-info-row"><span class="vi-label">Follow Up</span><span class="vi-value">{{ v.follow_up_date|date:"F d, Y"|default:"—" }}</span></div>
+                <div class="visit-info-row"><span class="vi-label">Symptoms</span><span class="vi-value">{{ v.symptoms|default:"—" }}</span></div>
+              </div>
+              <div class="col-sm-6">
+                <div class="visit-info-row"><span class="vi-label">Diagnosis</span><span class="vi-value">{{ v.diagnosis|default:"—" }}</span></div>
+                <div class="visit-info-row"><span class="vi-label">Tests</span><span class="vi-value">{{ v.tests|default:"—" }}</span></div>
+                <div class="visit-info-row"><span class="vi-label">Prescription</span><span class="vi-value">{{ v.prescription|default:"—" }}</span></div>
+                <div class="visit-info-row"><span class="vi-label">Notes</span><span class="vi-value">{{ v.notes|default:"—" }}</span></div>
+              </div>
+            </div>
+
+            {% if v.prescription_image %}
+            <div class="mt-3">
+              <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#8896a5;margin-bottom:0.5rem;">Prescription Image</div>
+              <a href="{{ v.prescription_image.url }}" target="_blank" class="copy-btn" style="text-decoration:none;">
+                <i class="bi bi-file-earmark-medical"></i> View Prescription
+              </a>
+            </div>
+            {% endif %}
+
+            {% if v.blockchain_hash %}
+            <div class="mt-3">
+              <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#8896a5;margin-bottom:0.4rem;">Blockchain Hash</div>
+              <div class="hash-box" style="font-size:0.72rem;">{{ v.blockchain_hash }}</div>
+              <button class="copy-btn mt-2" onclick="copyToClipboard('{{ v.blockchain_hash }}', this)"><i class="bi bi-clipboard"></i> Copy Hash</button>
+            </div>
+            {% endif %}
+
+          </div>
+        </div>
+      </div>
+      <div style="padding:0.6rem 1.5rem;background:#f7fff9;border-top:1px solid #edf2f7;border-radius:0 0 14px 14px;font-size:0.75rem;color:#8896a5;">
+        <i class="bi bi-clock" style="font-size:0.7rem;"></i> Recorded on {{ v.created_at|date:"F d, Y · H:i" }}
+      </div>
+    </div>
+    {% endfor %}
+
+  {% else %}
+    <div class="panel">
+      <div class="panel-body">
+        <div class="empty-state" style="padding:3rem 1rem;">
+          <i class="bi bi-journal-x" style="font-size:3rem;color:#ccc;"></i>
+          <p style="font-weight:600;color:#1a2332;margin:.75rem 0 .4rem;">No records found</p>
+          <p style="font-size:.82rem;">Your visit records will appear here after a doctor updates them.</p>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+        </div><!-- end main-inner -->
+      </div><!-- end main-content -->
+    </div><!-- end layout -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{% static 'assets/js/medicare_common.js' %}"></script>
+    <script>
+      let activeFilter = 'all';
+      function setFilter(status, el) {
+        activeFilter = status;
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        filterDoctors();
+      }
+      function filterDoctors() {
+        const q = document.getElementById('doctorSearch').value.toLowerCase();
+        document.querySelectorAll('.doctor-grid-item').forEach(item => {
+          const nameMatch = item.dataset.name.includes(q);
+          const specMatch = item.dataset.spec.includes(q);
+          const statusMatch = activeFilter === 'all' || item.dataset.status === activeFilter;
+          item.style.display = (nameMatch || specMatch) && statusMatch ? '' : 'none';
+        });
+      }
+
+      function copyToClipboard(text, btn) {
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(function () {
+          const orig = btn.innerHTML;
+          btn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+          btn.style.background = '#e6f9f1';
+          btn.style.borderColor = '#0cb76b';
+          btn.style.color = '#0a6640';
+          setTimeout(function () {
+            btn.innerHTML = orig;
+            btn.style.background = '';
+            btn.style.borderColor = '';
+            btn.style.color = '';
+          }, 2000);
+        });
+      }
+
+    </script>
+
+    {% if messages %}
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        {% for message in messages %}
+          Swal.fire({
+            title: "{{ message|escapejs }}",
+            icon: "{{ message.tags }}",
+            confirmButtonText: "OK"
+          });
+        {% endfor %}
+      });
+    </script>
+    {% endif %}
+  </body>
+</html>

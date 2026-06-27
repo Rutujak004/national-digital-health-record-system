@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<!-- Login Section - Same structure with optimized spacing (no scroll needed) -->
+<section id="login" class="contact section" style="min-height: auto; padding: 40px 0;">
+
+  <!-- Section Title -->
+  <div class="container section-title" data-aos="fade-up">
+    <h2>User Login Here</h2>
+    <p class="text-muted">Access your Blockchain Health Records securely</p>
+  </div><!-- End Section Title -->
+
+  <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+    <div class="row gy-3 align-items-center">
+
+      <div class="col-lg-5">
+        <div class="info-wrap text-center">
+          <img src="{% static 'assets/img/login.jpg' %}" alt="Login Image" width="260px"
+            class="img-fluid rounded shadow">
+          <div class="mt-3 p-2 bg-light rounded-3">
+            <i class="fas fa-shield-alt fa-2x text-success mb-1"></i>
+            <p class="mb-0 small">Blockchain Secured · Immutable Records · Patient Controlled</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        <form method="POST" action="{% url 'log_in' %}" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="row gy-3">
+
+            <div class="col-md-12">
+              <label class="pb-1 fw-semibold">
+                <i class="fas fa-envelope me-1 text-success"></i> Email Address *
+              </label>
+              <input type="email" name="email" id="email" class="form-control" placeholder="Enter your registered email"
+                required style="padding: 10px 15px;">
+              <small class="text-muted" style="font-size: 11px;">Use your registered email to login</small>
+            </div>
+
+            <div class="col-md-12">
+              <label class="pb-1 fw-semibold">
+                <i class="fas fa-lock me-1 text-success"></i> Password *
+              </label>
+              <input type="password" name="password" id="password" class="form-control"
+                placeholder="Enter your password" required style="padding: 10px 15px;">
+            </div>
+
+            <div class="col-md-12 text-center mt-3">
+              <button type="submit"
+                style="background-color: #10bc69; color: white; padding: 8px 30px; border-radius: 30px; border: none; font-weight: 600; font-size: 14px; transition: all 0.3s ease;"
+                onmouseover="this.style.backgroundColor='#0da05a'; this.style.transform='scale(1.02)'"
+                onmouseout="this.style.backgroundColor='#10bc69'; this.style.transform='scale(1)'">
+                <i class="fas fa-sign-in-alt me-2"></i> Login Here
+              </button>
+            </div>
+          </div>
+        </form>
+      </div><!-- End Login Form -->
+    </div>
+  </div>
+
+</section><!-- /Login Section -->
+
+<!-- Display Django messages -->
+{% if messages %}
+<div class="container mt-2" data-aos="fade-up" style="margin-bottom: 10px;">
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert"
+    style="padding: 8px 15px; font-size: 13px;">
+    <i class="fas fa-bell me-2"></i> {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
+      style="font-size: 10px;"></button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<style>
+  /* Keep same styling but optimized for compact view - no scroll needed */
+  html,
+  body {
+    height: auto;
+    overflow-y: visible;
+  }
+
+  .contact .info-wrap {
+    background: #f8f9fa;
+    border-radius: 20px;
+    padding: 20px 15px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+  }
+
+  .contact .form-control {
+    border-radius: 12px;
+    padding: 10px 15px;
+    border: 1px solid #e0e0e0;
+    transition: all 0.3s ease;
+    font-size: 14px;
+  }
+
+  .contact .form-control:focus {
+    border-color: #10bc69;
+    box-shadow: 0 0 0 3px rgba(16, 188, 105, 0.1);
+    outline: none;
+  }
+
+  .section-title {
+    margin-bottom: 20px;
+  }
+
+  .section-title h2 {
+    font-size: 28px;
+    font-weight: 700;
+    position: relative;
+    padding-bottom: 12px;
+    margin-bottom: 5px;
+  }
+
+  .section-title h2:after {
+    content: '';
+    position: absolute;
+    display: block;
+    width: 50px;
+    height: 3px;
+    background: #10bc69;
+    bottom: 0;
+    left: calc(50% - 25px);
+  }
+
+  .section-title .text-muted {
+    font-size: 13px;
+    margin-top: 5px;
+  }
+
+  button[type="submit"] {
+    box-shadow: 0 4px 12px rgba(16, 188, 105, 0.3);
+  }
+
+  button[type="submit"]:hover {
+    box-shadow: 0 6px 16px rgba(16, 188, 105, 0.4);
+    cursor: pointer;
+  }
+
+  .alert {
+    border-radius: 12px;
+    border: none;
+  }
+
+  .alert-success {
+    background-color: #d4edda;
+    color: #155724;
+  }
+
+  .alert-error,
+  .alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+
+  .alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+  }
+
+  .alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+  }
+
+  hr {
+    opacity: 0.3;
+    margin: 8px 0;
+  }
+
+  /* Reduce overall spacing */
+  .gy-3 {
+    --bs-gutter-y: 0.75rem;
+  }
+
+  .container {
+    max-width: 1140px;
+  }
+
+  /* Make sure everything fits without scroll */
+  @media (min-height: 600px) {
+    section {
+      min-height: auto !important;
+    }
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .contact .info-wrap {
+      margin-bottom: 15px;
+    }
+
+    .section-title h2 {
+      font-size: 24px;
+    }
+
+    button[type="submit"] {
+      padding: 8px 25px !important;
+    }
+  }
+
+  /* Ensure no overflow */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Fine-tune small text */
+  .text-muted small,
+  small.text-muted {
+    font-size: 10px;
+  }
+
+  /* Adjust link styles */
+  a {
+    color: #10bc69;
+  }
+
+  a:hover {
+    color: #0da05a;
+  }
+
+  /* Make sure links are properly spaced */
+  .mt-2 {
+    margin-top: 0.3rem !important;
+  }
+</style>
+
+<!-- Add FontAwesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+<!-- Ensure proper viewport height handling -->
+<script>
+  // Small adjustment to ensure page shows all content without scroll if possible
+  document.addEventListener('DOMContentLoaded', function () {
+    // Check if content height is less than viewport height
+    const bodyHeight = document.body.scrollHeight;
+    const windowHeight = window.innerHeight;
+
+    if (bodyHeight <= windowHeight) {
+      // If content fits, ensure no unnecessary scrollbar
+      document.body.style.overflowY = 'auto';
+    }
+  });
+</script>
+{% endblock body %}
